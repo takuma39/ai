@@ -144,13 +144,24 @@ flowchart TD
 
 **Claudeにインタビューさせる（推奨パターン）**
 
-```
+```text
 I want to build [brief description]. Interview me in detail using the AskUserQuestion tool.
 
 Ask about technical implementation, UI/UX, edge cases, concerns, and tradeoffs.
 Don't ask obvious questions, dig into the hard parts I might not have considered.
 
 Keep interviewing until we've covered everything, then write a complete spec to SPEC.md.
+```
+
+**日本語版プロンプト：**
+
+```text
+[構築したいものの簡単な説明] を構築したいと考えています。AskUserQuestion ツールを使って、私に詳しくインタビューしてください。
+
+技術的な実装、UI/UX、エッジケース、懸念事項、トレードオフについて質問してください。
+当たり前の質問は避け、私が考慮していないかもしれない難しい部分を深掘りしてください。
+
+すべてを網羅するまでインタビューを続け、完了したら完全な仕様書を SPEC.md に作成してください。
 ```
 
 このアプローチで：
@@ -179,7 +190,7 @@ Keep interviewing until we've covered everything, then write a complete spec to 
 
 ### 1.5 ユーザーストーリーとBDD
 
-```
+```text
 As a [user type],
 I want to [action],
 So that [benefit].
@@ -188,6 +199,19 @@ Acceptance Criteria:
 GIVEN [context]
 WHEN [action]
 THEN [expected result]
+```
+
+**日本語版：**
+
+```text
+[ユーザー層] として、
+[目的/利益] を達成するために、
+[機能/アクション] を実行したい。
+
+受け入れ基準（Acceptance Criteria）:
+GIVEN（前提）: [事前条件やコンテキスト]
+WHEN（操作）: [アクションの実行]
+THEN（結果）: [期待される結果]
 ```
 
 BDDのシナリオはAIへのfew-shotプロンプトとして直接機能する。
@@ -534,7 +558,7 @@ Open Variable Visualizerプラグインで2つのファイルを出力：
 
 **Step 4: AIへのプロンプト**
 
-```
+```text
 Implement the component at [Figma Frame URL].
 Use the design tokens from @tokens.json.
 Framework: React + Tailwind CSS.
@@ -543,6 +567,19 @@ Constraints:
 - Follow the patterns in @CLAUDE.md
 - Make it fully responsive (mobile-first)
 Take a screenshot after implementation and compare to the original design.
+```
+
+**日本語版プロンプト：**
+
+```text
+[FigmaフレームURL] にあるコンポーネントを実装してください。
+@tokens.json にあるデザイントークンを使用してください。
+フレームワーク：React + Tailwind CSS
+制約事項：
+- 可能な限り /src/components 配下の既存コンポーネントを流用すること
+- @CLAUDE.md に記載されたパターンに従うこと
+- モバイルファーストの完全レスポンシブ対応にすること
+実装完了後にスクリーンショットを撮り、元のデザインと比較してください。
 ```
 
 ### 3.3 デザイントークンワークフロー
@@ -612,9 +649,16 @@ cat error.log | claude
 
 #### サブエージェントで調査をオフロード
 
-```
+```text
 Use subagents to investigate how our authentication system handles token refresh,
 and whether we have any existing OAuth utilities I should reuse.
+```
+
+**日本語版プロンプト：**
+
+```text
+サブエージェントを使用して、現在の認証システムがトークンの更新（リフレッシュ）をどのように処理しているか調査してください。
+また、再利用できる既存のOAuth関連のユーティリティがないか確認してください。
 ```
 
 サブエージェントはメインコンテキストを汚染せずにコードベースを調査できる最強ツール。
@@ -659,9 +703,16 @@ claude -p "List all API endpoints" --output-format json
 - **Agent Mode**: 大きなタスクを委任。自律的にターミナルコマンドを実行
 - Agent Modeでの推奨プロンプトパターン：
 
-```
+```text
 Write failing tests for [feature], then implement them to make them pass.
 Limit changes to these files unless you propose a plan first: [file list]
+```
+
+**日本語版プロンプト：**
+
+```text
+[機能名] に対する失敗するテストを作成し、その後、テストが通るように実装を行ってください。
+事前に計画を提案して合意を得ない限り、変更は以下のファイルに限定してください：[ファイル一覧]
 ```
 
 #### YOLO Mode（無人実行）の注意点
@@ -693,12 +744,23 @@ Limit changes to these files unless you propose a plan first: [file list]
 3. **Constraints**: 具体的な制約・要件
 
 例：
-```
+```text
 Context: We use Zustand for state management and React Query for server state.
 Intent: Implement a user profile update feature.
 Constraints: - Must follow the pattern in @UserSettings.tsx
              - Include optimistic updates
              - Handle network errors with retry logic
+```
+
+**日本語版プロンプト：**
+
+```text
+Context (コンテキスト): 状態管理にはZustandを、サーバー状態にはReact Queryを使用しています。
+Intent (目的): ユーザープロフィール更新機能を実装したい。
+Constraints (制約事項): 
+- @UserSettings.tsx のパターンに従うこと
+- オプティミスティック・アップデート（楽観的UI更新）を含めること
+- ネットワークエラー発生時のリトライ処理を実装すること
 ```
 
 #### Code Review の活用
@@ -761,13 +823,24 @@ Devin can delegate subtasks to a team of managed Devins running in parallel VMs
 
 **プロンプト例**
 
-```
+```text
 Write failing tests for a validateEmail function.
 Test cases must cover:
 - Valid: user@example.com, user+tag@domain.co.jp
 - Invalid: empty string, missing @, missing domain, double @
 Then implement the function to pass all tests.
 Do NOT use any email validation library.
+```
+
+**日本語版プロンプト：**
+
+```text
+validateEmail 関数の失敗するテストを作成してください。
+テストケースには以下を網羅する必要があります：
+- 有効（Valid）：user@example.com, user+tag@domain.co.jp
+- 無効（Invalid）：空文字、@がない、ドメインがない、@が2つある
+テスト作成後、すべてのテストを通過するように関数を実装してください。
+既存のメールバリデーションライブラリは絶対に使用しないでください。
 ```
 
 ---
@@ -795,7 +868,7 @@ Do NOT use any email validation library.
 
 ### 5.3 Claudeによる設計レビュープロンプト
 
-```
+```text
 You are a senior software architect. Review this PR in context of the spec @SPEC.md and architecture @ARCHITECTURE.md.
 
 Check:
@@ -808,9 +881,24 @@ Check:
 Reference the existing patterns in @src/middleware/ for comparison.
 ```
 
+**日本語版プロンプト：**
+
+```text
+あなたはシニアソフトウェアアーキテクトです。@SPEC.md の仕様書と @ARCHITECTURE.md のアーキテクチャを踏まえて、この PR（プルリクエスト）をレビューしてください。
+
+以下の点を確認してください：
+1. 実装は仕様と一致しているか？
+2. アーキテクチャ上の矛盾や一貫性の欠如はないか？
+3. セキュリティ：インジェクションのリスク、認証の欠陥、機密情報の露出、安全でないデータ処理がないか？
+4. テストでカバーされていないエッジケースはないか？
+5. パフォーマンスのボトルネックになる部分はないか？
+
+比較のために、@src/middleware/ の既存の実装パターンを参照してください。
+```
+
 ### 5.4 セキュアコードレビューのプロンプトライブラリ
 
-```
+```text
 # インジェクション脆弱性チェック
 Review @file.ts for injection vulnerabilities: SQL injection, XSS,
 command injection, path traversal. Show specific line numbers and fixes.
@@ -825,6 +913,24 @@ Review authentication flow in @src/auth/. Check for:
 # シークレット露出チェック
 Scan @./src for hardcoded secrets, API keys, passwords, or credentials.
 Also check for patterns that might accidentally log sensitive data.
+```
+
+**日本語版プロンプト：**
+
+```text
+# インジェクション脆弱性チェック
+@file.ts のインジェクション脆弱性（SQLインジェクション、XSS、コマンドインジェクション、パストラバーサル）をレビューしてください。具体的な行番号と修正案を提示してください。
+
+# 認証・認可チェック
+@src/auth/ の認証フローをレビューしてください。以下の点を確認してください：
+- 安全でないセッション管理
+- 認可（権限）チェックの漏れ
+- JWTの脆弱性
+- 権限昇格のリスク
+
+# シークレット露出チェック
+@./src 内にハードコードされたシークレット、APIキー、パスワード、または認証情報（クレデンシャル）がないかスキャンしてください。
+また、機密データを誤ってログ出力してしまうようなパターンがないかも確認してください。
 ```
 
 ---
@@ -890,7 +996,7 @@ npx playwright agent generate --plan test-plan.md
 
 **AIユニットテスト生成プロンプト**
 
-```
+```text
 Write comprehensive unit tests for @./src/utils/validation.ts using Vitest.
 
 Requirements:
@@ -901,9 +1007,22 @@ Requirements:
 - Aim for >90% coverage
 ```
 
+**日本語版プロンプト：**
+
+```text
+Vitestを使用して、@./src/utils/validation.ts の網羅的なユニットテストを作成してください。
+
+要件（Requirements）:
+- exportされているすべての関数をカバーすること
+- 正常系（ハッピーパス）、エッジケース、エラーシナリオを含めること
+- 次のパターンに従った説明的なテスト名を使用すること：「[condition] の場合、[behavior] であるべき（should [behavior] when [condition]）」
+- 必要な場合を除き、Mock（モック）は絶対に使用しないこと
+- 90%以上のカバレッジを目指すこと
+```
+
 **AIで統合テストを生成するプロンプト**
 
-```
+```text
 Write integration tests for the user authentication flow.
 Files involved: @src/api/auth.ts, @src/middleware/session.ts, @src/db/users.ts
 
@@ -914,6 +1033,21 @@ Test scenarios:
 4. Logout and session invalidation
 
 Use Vitest with supertest for HTTP testing.
+```
+
+**日本語版プロンプト：**
+
+```text
+ユーザー認証フローの統合テストを作成してください。
+関連ファイル：@src/api/auth.ts, @src/middleware/session.ts, @src/db/users.ts
+
+テストシナリオ：
+1. 有効な認証情報を使用したログイン成功
+2. 無効なパスワードでのログイン失敗（5回失敗後のレート制限処理の確認）
+3. トークン更新（リフレッシュ）フロー
+4. ログアウト処理およびセッションの無効化
+
+HTTPテスト用として Vitest と supertest を使用してください。
 ```
 
 ### 6.4 CIへの組み込み
