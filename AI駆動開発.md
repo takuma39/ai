@@ -195,9 +195,7 @@ flowchart TD
     A["1. 要件定義・仕様書作成<br/>(Spec-Driven Development)"] --> B["2. アーキテクチャ設計<br/>(CLAUDE.md / .cursorrules)"]
     B --> C["3. UI/UXデザイン<br/>(Figma MCP)"]
     C --> D["4. 実装<br/>(Claude Code / Cursor)"]
-    C -.->|"自律エージェント委譲"| D2["4'. Devin<br/>(Slack経由タスク委譲)"]
     D --> T["テスト作成・実行<br/>(Playwright / Vitest)"]
-    D2 --> T
     T -->|"失敗"| D
     T -->|"成功"| E["5. コードレビュー<br/>(Copilot + Claude Code + 人間)"]
     E -->|修正| D
@@ -206,7 +204,13 @@ flowchart TD
     G -->|"アラート (Slack)"| H{"インシデント?"}
     H -->|"AI調査・修正"| D
     H -->|"正常"| I["リリース完了"]
+
+    style D2 fill:#2d3748,stroke:#4a5568,color:#e2e8f0
+    D2["Devin<br/>(Slack / GitHub経由)"] -.->|"自律タスク実行"| T
+    D2 -.->|"自動PR作成"| E
 ```
+
+> **Devinの位置づけ**：Devinはメインの開発フローと並行して動く自律エージェントです。Slack や GitHub Issue 経由でタスクを受け取り、独立して実装・テスト・PR作成まで行います（詳細は 4.4 参照）。
 
 ### 各フェーズの成果物と完了条件
 
@@ -700,14 +704,13 @@ Open Variable Visualizerプラグインで2つのファイルを出力：
 
 ### 3.2 デザイントークンワークフロー
 
-```
-Figma Variables (Single Source of Truth)
-    ↓
-tokens.json (エクスポート)
-    ↓
-CSS Variables / Tailwind Config / JS Constants (コードへ変換)
-    ↓
-コンポーネント実装で参照
+```mermaid
+flowchart TD
+    A["Figma Variables<br/>(Single Source of Truth)"] -->|エクスポート| B["tokens.json"]
+    B -->|変換| C["CSS Variables /<br/>Tailwind Config /<br/>JS Constants"]
+    C -->|参照| D["コンポーネント実装"]
+    
+    style A fill:#a855f7,stroke:#7c3aed,color:#fff
 ```
 
 コードとデザインの乖離を防ぐため、デザイントークンをGitで管理し、Figmaの変更を自動的にコードに反映するCI/CDパイプラインを構築することを推奨。
@@ -877,7 +880,21 @@ AIがチームのルールに沿って自立的にコードを生成できるよ
 
 ### 4.4 Devin の活用パターン
 
-```
+Devinは、Claude CodeやCursorのような「手元のエディタで動くAI」とは異なり、**クラウド上のVM（仮想マシン）で独立して動く自律型エージェント**です。人間がSlackやWebから指示を出すと、自分でコードを読み、実装し、テストを実行し、PRを作成するところまでを自律的にこなします。
+
+#### Devin vs Claude Code / Cursor の使い分け
+
+| 項目 | Claude Code / Cursor | Devin |
+|------|---------------------|-------|
+| 動作場所 | ローカルPC（エディタ内） | クラウドVM |
+| 操作方法 | エディタのチャット画面 | Slack / Web UI |
+| 得意なタスク | 設計判断を伴う実装 | 定型的・反復的タスク |
+| 人間の関与 | リアルタイムで対話 | 完了後にPRをレビュー |
+| AIゲートウェイ | 経由可能 | 経由不可（SaaS内部で完結） |
+
+#### 利用例
+
+```text
 # Slackでの利用（推奨パターン）
 @Devin issue #123のバグを修正して - ユーザーがパスワードをリセットできない
 
@@ -885,8 +902,11 @@ AIがチームのルールに沿って自立的にコードを生成できるよ
 @Devin 並列VM群で動くDevinチームを作成し、それぞれのサブタスクを委譲して処理して
 ```
 
-- 定型的・反復的なタスクに最適（マイグレーション・リファクタリング）
-- 新規機能開発は、人間のレビューをMUSTとする（本番投入時）
+#### 運用上の注意点
+
+- **向いているタスク**：マイグレーション、リファクタリング、テスト追加、ドキュメント更新
+- **向いていないタスク**：新規アーキテクチャ設計、仕様の曖昧なタスク
+- **必須ルール**：本番投入するコードは、Devin作成のPRでも**人間のレビューをMUST**とする
 - MCPによるJira/GitHub連携でタスク自動取得が可能
 
 ### 4.5 MCP（Model Context Protocol）エコシステム
@@ -908,11 +928,15 @@ AIがチームのルールに沿って自立的にコードを生成できるよ
 
 **AI-TDDの推奨サイクル**
 
-```
-1. 失敗するテストを先に書く（AIに「write failing tests for...」と指示）
-2. テストを通過する最小限の実装を書く
-3. リファクタリング
-4. 上記サイクルをAIと一緒に繰り返す
+```mermaid
+flowchart LR
+    A["1. 失敗するテストを書く<br/>(AIに指示)"] --> B["2. 最小限の実装<br/>(テスト通過)"]
+    B --> C["3. リファクタリング"]
+    C -->|繰り返し| A
+    
+    style A fill:#ef4444,stroke:#dc2626,color:#fff
+    style B fill:#22c55e,stroke:#16a34a,color:#fff
+    style C fill:#3b82f6,stroke:#2563eb,color:#fff
 ```
 
 **プロンプト例**
@@ -993,13 +1017,33 @@ sequenceDiagram
 
 ### 5.2 Copilot PR レビューの設定
 
+**設定方法：**
+
+1. リポジトリの Settings → Copilot → Code Review で「Copilot code review」を有効化
+2. PRの Reviewers に `copilot` を追加（手動、または下記のActionsで自動化）
+
 ```yaml
 # .github/workflows/copilot-review.yml
-# PRにCopilotを自動アサインする設定
+name: Auto-assign Copilot Review
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+jobs:
+  assign-reviewer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.pulls.requestReviewers({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              reviewers: ['copilot']  // Copilotを自動アサイン
+            });
 ```
 
-- PR作成時にCopilotをReviewerに追加
-- カスタムインストラクションで重点チェック項目を指定
+- カスタムインストラクション（`.github/copilot-review-instructions.md`）で重点チェック項目を指定可能
 - CodeQLと組み合わせてセキュリティ脆弱性を自動検出（SQL injection, XSS等）
 
 ### 5.3 Claudeによる設計レビュープロンプト
@@ -1087,15 +1131,21 @@ npx playwright agent generate --plan test-plan.md
 
 ### 6.3 AI × テストピラミッド
 
+```mermaid
+graph TD
+    E2E["🔺 E2Eテスト<br/>Playwright Agents<br/>(少数・高信頼)"]
+    Integ["🔸 統合テスト<br/>AI生成<br/>(中程度)"]
+    Unit["🟩 ユニットテスト<br/>Vitest / Jest<br/>(AI大量生成・高速)"]
+    
+    E2E --- Integ
+    Integ --- Unit
+
+    style E2E fill:#ef4444,stroke:#dc2626,color:#fff
+    style Integ fill:#f59e0b,stroke:#d97706,color:#fff
+    style Unit fill:#22c55e,stroke:#16a34a,color:#fff
 ```
-         /\
-        /E2E\         ← Playwright Agents（少数・高信頼）
-       /------\
-      / Integ  \      ← AI生成の統合テスト
-     /----------\
-    /  Unit Tests \   ← Vitest/Jest（AI大量生成・高速）
-   /--------------\
-```
+
+> ピラミッドの下層ほどAI生成の比率を高めるのが基本戦略。上層（E2E）は数を絞り、重要な業務フローのみをカバーする。
 
 **AIユニットテスト生成プロンプト**
 
@@ -1244,8 +1294,6 @@ claude -p "Build failed with: $(cat build-error.log). Analyze and suggest fix." 
 - **アラート疲労の削減**：AIが低信頼度のアラートを自動フィルタリング
 - **分散トレーシング**：複雑なマイクロサービス間の障害伝播を自動追跡
 
----
-
 ### 7.5 LLM FinOpsとコスト最適化（プロンプトキャッシュ等）
 
 AIエージェントを活用した開発において、API利用コストの最適化（LLM FinOps）は運用上の重要課題です。とりわけ、長大なCLAUDE.mdや巨大なシステム仕様書を毎セッション読み込ませるとトークン消費量が爆発します。
@@ -1256,7 +1304,7 @@ AIエージェントを活用した開発において、API利用コストの最
 - **長大なプロンプト（静的コンテキスト）の固定化**: 頻繁に変更されない「システム全体仕様」や「ルールファイル」は先頭に配置（またはキャッシュ指定対象とする）し再利用することで、2回目以降の読み込みコストを最大90%削減できます。
 - **ファイルの明確な分割**: 「毎回の対話で更新・送信する動的な情報」と「システム共通の静的な情報」をあらかじめディレクトリレベルで分割し、API側のキャッシュ機構が効率良く働くように設計することを推奨します（SHOULD）。
 
-## 7.6 RAG / ナレッジベース活用
+### 7.6 RAG / ナレッジベース活用
 
 社内ドキュメント・API仕様・過去のインシデント対応などをAIに参照させることで、ハルシネーションを抑え、自社のコンテキストに即した回答を得る。
 
@@ -1761,15 +1809,14 @@ AI駆動開発への移行において、ツール導入と同等以上に重要
 
 ### 10.6 AIコーディングの役割変化
 
-```
-Before AI:            After AI:
-Human writes code     Human writes SPECS
-Human reviews code    Human reviews AI output
-Human writes tests    Human validates AI tests
-Human debugs          Human supervises AI debug
-```
+| 従来の開発者の役割 | AI駆動開発での役割 |
+|---|---|
+| コードを **書く** | **仕様を書き**、AIにコードを生成させる |
+| コードを **レビューする** | AIの出力を **レビュー・修正する** |
+| テストを **書く** | AIが生成したテストを **検証・補強する** |
+| バグを **修正する** | AIのデバッグを **監督・判断する** |
 
-開発者の役割は「コードを書く人」から「AIの出力をキュレーションし、品質を担保する人」へシフトする。
+> **開発者の役割は「コードを書く人」から「AIの出力をキュレーションし、品質を担保するアーキテクト」へシフトする。**
 
 ### 10.7 30/60/90日導入ロードマップ
 
