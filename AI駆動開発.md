@@ -47,6 +47,8 @@ AIを活用して要件定義から実装・テストまでの開発プロセス
 
 ### ツール連携図
 
+#### ① 設計・実装フロー
+
 ```mermaid
 graph TD
     Claude["Claude / AI"]
@@ -60,7 +62,7 @@ graph TD
         Jira["Jira / GitHub"]
     end
 
-    subgraph apispec["API仕様・テスト"]
+    subgraph apispec["API仕様"]
         Apidog["Apidog<br/>AI Schema生成<br/>テストケース自動生成<br/>APIドキュメント公開"]
     end
 
@@ -80,6 +82,36 @@ graph TD
         DB["Postgres / SQLite"]
     end
 
+    Claude <-->|"仕様策定"| specs
+    Claude <-->|"API設計支援"| apispec
+    impl <-->|"タスク取得・更新"| tasks
+    saas_agent <-->|"自律タスク取得"| tasks
+    specs -->|"Markdown変換"| MD
+    MD -->|"OpenAPI Import"| apispec
+    apispec -->|"MCP Server"| impl
+    MD -->|"仕様読み込み"| Figma
+    Figma <-->|"Figma MCP"| CC
+    MD -->|"仕様読み込み"| impl
+    MD -->|"コード・仕様熟読"| saas_agent
+    impl <-->|"スキーマ参照・クエリ"| database
+    impl -->|"PR作成"| PR["Pull Request"]
+    saas_agent -->|"自動PR作成"| PR
+```
+
+#### ② レビュー・CI/CD・運用フロー
+
+```mermaid
+graph TD
+    PR["Pull Request"]
+
+    subgraph impl["実装・コード生成"]
+        CC["Claude Code"]
+    end
+
+    subgraph saas_agent["クラウド型自律エージェント"]
+        Devin["Devin"]
+    end
+
     subgraph review["レビュー"]
         Copilot["GitHub Copilot<br/>PR自動レビュー"]
         ClaudeRev["Claude<br/>設計・整合性レビュー"]
@@ -90,9 +122,8 @@ graph TD
         Chrome["Chrome MCP<br/>ブラウザ操作・確認"]
     end
 
-    subgraph cicd["CI/CD & Security"]
+    subgraph cicd["CI/CD"]
         GHActions["GitHub Actions"]
-        SecScan["Secret Scanning<br/>SAST Tools"]
     end
 
     subgraph monitoring["監視・運用（MCP連携）"]
@@ -103,40 +134,52 @@ graph TD
         Slack["Slack / Teams"]
     end
 
-    subgraph gateway["AIゲートウェイ※"]
-        GWProxy["Portkey / Bedrock Guardrails<br/>PIIマスキング<br/>プロンプトフィルタ<br/>コスト管理・監査ログ"]
-    end
+    Prod["本番環境 / アプリ"]
 
-    LLM["バックエンドLLM<br/>OpenAI / Claude<br/>Bedrock / Azure OpenAI"]
-
-    Claude <-->|"仕様策定"| specs
-    Claude <-->|"API設計支援"| apispec
-    impl <-->|"タスク取得・更新"| tasks
-    saas_agent <-->|"自律タスク取得"| tasks
-    specs -->|"Markdown変換"| MD
-    MD -->|"OpenAPI Import"| apispec
-    apispec -->|"MCP Server"| impl
-    apispec -->|"API仕様提供"| testing
-    MD -->|"仕様読み込み"| Figma
-    Figma <-->|"Figma MCP"| CC
-    MD -->|"仕様読み込み"| impl
-    MD -->|"コード・仕様熟読"| saas_agent
-    impl <-->|"スキーマ参照・クエリ"| database
+    PR --> review
     impl <-->|"テスト生成・実行"| testing
     saas_agent <-->|"テスト自動実行"| testing
-    impl -->|"PR作成"| review
-    saas_agent -->|"自動PR作成"| review
     review <-->|"CI自動チェック"| cicd
-    cicd -->|"デプロイ"| Prod["本番環境 / アプリ"]
+    cicd -->|"デプロイ"| Prod
     Prod -->|"エラー・メトリクス"| monitoring
     monitoring -.->|"アラート通知"| communication
     communication <-->|"調査指示・承認"| CC
     communication <-->|"メンション依頼(@Devin)"| saas_agent
     monitoring <-->|"ログ・メトリクス取得<br/>(インシデント調査)"| CC
+```
+
+#### ③ セキュリティ・ガバナンスフロー
+
+```mermaid
+graph TD
+    subgraph impl["実装・コード生成"]
+        CC["Claude Code"]
+        Cursor["Cursor"]
+    end
+
+    Claude["Claude / AI"]
+    Prod["本番環境 / アプリ"]
+
+    subgraph gateway["AIゲートウェイ"]
+        GWProxy["Portkey / Bedrock Guardrails<br/>PIIマスキング<br/>プロンプトフィルタ<br/>コスト管理・監査ログ"]
+    end
+
+    LLM["バックエンドLLM<br/>OpenAI / Claude<br/>Bedrock / Azure OpenAI"]
+
+    subgraph security["セキュリティスキャン"]
+        SecScan["Secret Scanning<br/>SAST Tools"]
+    end
+
+    subgraph saas_agent["クラウド型自律エージェント（ゲートウェイ対象外）"]
+        Devin["Devin"]
+    end
+
     impl -->|"プロンプト送信"| gateway
     Claude -->|"プロンプト送信"| gateway
     Prod -->|"本番プロンプト送信"| gateway
     gateway -->|"フィルタ・マスキング<br/>ログ・コスト制御"| LLM
+    impl -->|"コミット時スキャン"| security
+    Devin -.->|"直接LLM呼び出し<br/>（ゲートウェイ経由不可）"| LLM
 ```
 
 > **※AIゲートウェイの適用範囲**：ゲートウェイが保護できるのは「自社アプリ/コードからLLM APIを呼ぶ」経路のみ。GitHub Copilotなどの外部SaaSはそれぞれが直接LLMを呼ぶため、ゲートウェイでは介入できない。詳細は `9.6` を参照。
