@@ -33,6 +33,7 @@ AIを活用して要件定義から実装・テストまでの開発プロセス
 | 自律エージェント      | Devin / OpenHands                             | 反復タスクの自動化（検証用途）                             |
 | テスト自動化          | Playwright MCP / Chrome MCP                   | E2Eテスト自動生成・実行                                    |
 | 監視・運用（MCP連携） | Datadog MCP / Sentry MCP                      | 障害ログ・メトリクスの自動取得、根本原因調査               |
+| コミュニケーション（MCP連携） | Slack MCP / Teams MCP                 | 過去の議論コンテキスト検索、インシデント報告と承認         |
 | セキュリティ          | GitGuardian / GitHub Secret Scanning          | シークレット漏洩・脆弱性検出                               |
 | AIゲートウェイ        | Portkey / AWS Bedrock Guardrails / Azure APIM | プロンプトフィルタ・機密情報マスキング・コスト管理         |
 
@@ -50,9 +51,12 @@ AIを活用して要件定義から実装・テストまでの開発プロセス
 graph TD
     Claude["Claude / AI"]
 
-    subgraph specs["仕様書・タスク（MCP連携）"]
+    subgraph specs["仕様書作成（MCP連携）"]
         Excel["Excel / Sheets"]
         NotionTool["Notion"]
+    end
+
+    subgraph tasks["タスク管理（MCP連携）"]
         Jira["Jira / GitHub"]
     end
 
@@ -92,14 +96,19 @@ graph TD
         Monitor["Datadog / Sentry"]
     end
 
+    subgraph communication["コミュニケーション（MCP連携）"]
+        Slack["Slack / Teams"]
+    end
+
     subgraph gateway["AIゲートウェイ※"]
         GWProxy["Portkey / Bedrock Guardrails<br/>PIIマスキング<br/>プロンプトフィルタ<br/>コスト管理・監査ログ"]
     end
 
     LLM["バックエンドLLM<br/>OpenAI / Claude<br/>Bedrock / Azure OpenAI"]
 
-    Claude <-->|"要件・タスク取得"| specs
+    Claude <-->|"仕様策定"| specs
     Claude <-->|"API設計支援"| apispec
+    impl <-->|"タスク取得・更新"| tasks
     specs -->|"Markdown変換"| MD
     MD -->|"OpenAPI Import"| apispec
     apispec -->|"MCP Server"| impl
@@ -112,6 +121,8 @@ graph TD
     review -->|"テストコード生成"| testing
     testing --> cicd
     cicd -->|"本番アラート"| monitoring
+    monitoring -.->|"アラート通知"| communication
+    communication <-->|"調査指示・承認"| CC
     monitoring <-->|"ログ・メトリクス取得<br/>(インシデント調査)"| CC
     impl -->|"プロンプト送信"| gateway
     Claude -->|"プロンプト送信"| gateway
@@ -1296,6 +1307,32 @@ sequenceDiagram
 ```
 
 > **ポイント**：この連携を導入することで、システムの不具合発生時に開発者が複数のダッシュボード（Sentry、Datadog、ソースコード）を行き来する「コンテキストスイッチ」がなくなり、原因究明までの時間（MTTR）が劇的に短縮されます。
+
+### 7.8 ChatOpsと人間参加型（Human-in-the-Loop）インシデント対応
+
+「7.7 モニタリング連携」の発展形として、Slackのようなコミュニケーションツールを「AIへの依頼窓口」と「過去議論のデータベース」として活用する構成です。アラートの検知から承認までがチャットツール上で完結します。
+
+**シーケンス図：Slack連携フロー（ChatOps）**
+```mermaid
+sequenceDiagram
+    participant Sentry as Sentry / Datadog
+    participant Slack as Slack (連携先/MCP)
+    participant CC as AIエージェント
+    participant 人間
+    
+    Sentry->>Slack: "Critical: NullReferenceException" 発生通知
+    Slack->>人間: アラートを受信
+    人間->>Slack: (メンション) "@AI-Agent このエラーの原因を調査して"
+    Note over CC: AIが直接エラー内容を把握して調査開始
+    CC->>Sentry: 詳細情報と関連メトリクスを取得 (MCP)
+    CC->>Slack: (検索) 過去の類似エラー対応履歴を検索 (MCP)
+    CC->>CC: エラー分析とパッチの作成
+    CC->>Slack: "原因は外部APIのタイムアウト処理漏れです。修正PRを作成しました。マージしますか？"
+    人間->>Slack: "マージしてデプロイを実行してください" (承認)
+    CC->>CC: PRのマージとデプロイパイプラインのトリガー
+```
+
+このアプローチでは、AIが自律的に裏で調査からパッチ作成までを行う一方で、最終的な意思決定（デプロイ承認など）は人間がSlack上の見慣れたUI（スレッドの返信やボタン）で行うという理想的な「Human-in-the-Loop」を実現できます。
 
 ---
 
