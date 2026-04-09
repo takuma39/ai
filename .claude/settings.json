@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'REMINDER: ファイルを編集しました。/review でレビューを実行することを推奨します。'"
+          }
+        ]
+      }
+    ]
+  }
+}
