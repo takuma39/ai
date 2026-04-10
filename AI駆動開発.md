@@ -217,49 +217,35 @@ graph TD
 
 > **※AIゲートウェイの適用範囲**：ゲートウェイが保護できるのは「自社アプリ/コードからLLM APIを呼ぶ」経路のみ。GitHub Copilotなどの外部SaaSはそれぞれが直接LLMを呼ぶため、ゲートウェイでは介入できない。詳細は `9.6` を参照。
 
-#### ④ UI/UXデザイン・評価フロー
+#### ④ UX解析・継続的改善フロー（デプロイ後）
 
 ```mermaid
 graph TD
-    MD["仕様書 (SPEC.md)"]
+    Prod["本番環境 / A/Bテスト環境"]
 
-    subgraph design["UIデザイン作成"]
-        GenAI["Claude / Figma AI<br/>UIラフ案生成"]
-        Figma["Figma<br/>(人間のデザイナーによる洗練)"]
+    subgraph analytics["定量UXデータ解析"]
+        SaaS["Amplitude / Mixpanel / GA4<br/>(AIによる行動データ分析・スコア解析)"]
+        SaaSMCP["Analytics MCP Server"]
     end
 
-    subgraph evaluation["AI UX評価（Human-in-the-Loop）"]
-        StaticReview["Claude<br/>静的デザインレビュー<br/>(アクセシビリティ・レイアウト)"]
-        PersonaTest["Playwright + LLM<br/>自律的ペルソナUXテスト<br/>(動的な体験・離脱の評価)"]
+    subgraph agent["分析・実装エージェント"]
+        ClaudeCode["Claude Code<br/>(課題の特定・UI修正コードの生成)"]
     end
 
-    subgraph impl["実装・連携"]
-        FigmaMCP["Figma MCP"]
-        ClaudeCode["Claude Code"]
+    subgraph feedback["仕様・デザインへのフィードバック"]
+        MD["仕様書 (SPEC.md)<br/>(データに基づく要件のアップデート)"]
+        Figma["Figma<br/>(新たなUI課題・離脱ポイントの共有)"]
     end
 
-    subgraph analytics["定量UXデータ解析 (本番・A/Bテスト後)"]
-        SaaS["Amplitude / Mixpanel / GA4<br/>(行動データのAI分析・根本原因調査)"]
-        SaaSMCP["Analytics MCP"]
-    end
-
-    MD -->|"要件提示"| GenAI
-    GenAI -->|"初期プロトタイプ"| Figma
-    Figma -->|"画面スクショ"| StaticReview
-    StaticReview -.->|"改善フィードバック"| Figma
-    
-    Figma <-->|"デザインデータ提供"| FigmaMCP
-    FigmaMCP -->|"コンポーネント実装"| ClaudeCode
-    
-    ClaudeCode -->|"ローカル実行環境を操作"| PersonaTest
-    PersonaTest -.->|"UX課題レポート<br/>(人間の最終判断・修正)"| Figma
-
-    ClaudeCode -->|"デプロイ・ユーザーの行動ログ"| SaaS
+    Prod -->|"ユーザーの行動ログ・<br/>フラストレーション検知"| SaaS
     SaaS <-->|"データ同期"| SaaSMCP
     SaaSMCP -->|"離脱原因やスコアをプロンプトで直接調査<br/>修正UIコード・改善案を自動生成"| ClaudeCode
 
     ClaudeCode -.->|"データに基づく仕様のアップデート"| MD
     ClaudeCode -.->|"新たなデザイン要件・課題の<br/>フィードバック"| Figma
+    
+    MD -.->|"次スプリントの<br/>要件定義・実装へ"| ClaudeCode
+    Figma -.->|"次スプリントの<br/>デザイン改修へ"| ClaudeCode
 ```
 
 ---
