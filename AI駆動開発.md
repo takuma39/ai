@@ -171,9 +171,9 @@ graph TD
     cicd -->|"デプロイ"| Prod
     Prod -->|"エラー・メトリクス"| monitoring
     monitoring -.->|"アラート通知"| communication
-    communication <-->|"調査指示・承認"| CC
+    communication <-->|"調査指示・承認"| impl
     communication <-->|"メンション依頼(@Devin)"| saas_agent
-    monitoring <-->|"ログ・メトリクス取得<br/>(インシデント調査)"| CC
+    monitoring <-->|"ログ・メトリクス取得<br/>(インシデント調査)"| impl
 ```
 
 #### ③ セキュリティ・ガバナンスフロー
@@ -212,7 +212,7 @@ graph TD
     ide -.->|"直接LLM呼び出し<br/>（SaaS型はゲートウェイ経由不可）"| LLM
     cli -->|"コミット時スキャン"| security
     ide -->|"コミット時スキャン"| security
-    Devin -.->|"直接LLM呼び出し<br/>（ゲートウェイ経由不可）"| LLM
+    saas_agent -.->|"直接LLM呼び出し<br/>（ゲートウェイ経由不可）"| LLM
 ```
 
 > **※AIゲートウェイの適用範囲**：ゲートウェイが保護できるのは「自社アプリ/コードからLLM APIを呼ぶ」経路のみ。GitHub Copilotなどの外部SaaSはそれぞれが直接LLMを呼ぶため、ゲートウェイでは介入できない。詳細は `9.6` を参照。
