@@ -257,6 +257,9 @@ graph TD
     ClaudeCode -->|"デプロイ・ユーザーの行動ログ"| SaaS
     SaaS <-->|"データ同期"| SaaSMCP
     SaaSMCP -->|"離脱原因やスコアをプロンプトで直接調査<br/>修正UIコード・改善案を自動生成"| ClaudeCode
+
+    ClaudeCode -.->|"データに基づく仕様のアップデート"| MD
+    ClaudeCode -.->|"新たなデザイン要件・課題の<br/>フィードバック"| Figma
 ```
 
 ---
