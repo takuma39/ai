@@ -112,7 +112,7 @@ graph TD
     MD -->|"仕様読み込み"| Figma
     Figma <-->|"Figma MCP"| cli
     MD -->|"仕様熟読・実装"| cli
-    repo_tasks -->|"リポジトリ・仕様熟読"| saas_agent
+    MD -->|"リポジトリ・仕様熟読"| saas_agent
     cli <-->|"スキーマ参照・クエリ"| database
     cli -->|"コード生成・ローカル変更の連携"| ide
     ide -->|"差分レビュー・微修正・PR作成"| PR["Pull Request"]
