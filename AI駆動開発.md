@@ -84,7 +84,9 @@ graph TD
         Apidog["Apidog<br/>AI Schema生成<br/>テストケース自動生成<br/>APIドキュメント公開"]
     end
 
-    MD["Markdown / GitHub"]
+    subgraph github["GitHub"]
+        MD["Markdown仕様書"]
+    end
     Figma["Figma + Figma MCP"]
 
     subgraph ide["IDEレイヤー（コードの読み書き・UI上の差分レビュー）"]
@@ -111,9 +113,9 @@ graph TD
     MD -->|"OpenAPI Import"| apispec
     apispec -->|"MCP Server"| cli
     MD -->|"仕様読み込み"| Figma
-    Figma <-->|"Figma MCP"| CC
+    Figma <-->|"Figma MCP"| cli
     MD -->|"仕様熟読・実装"| cli
-    MD -->|"コード・仕様熟読"| saas_agent
+    github -->|"リポジトリ・仕様熟読"| saas_agent
     cli <-->|"スキーマ参照・クエリ"| database
     cli -->|"コード生成・ローカル変更の連携"| ide
     ide -->|"差分レビュー・微修正・PR作成"| PR["Pull Request"]
