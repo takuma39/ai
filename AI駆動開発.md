@@ -76,17 +76,14 @@ graph TD
         NotionTool["Notion"]
     end
 
-    subgraph tasks["タスク管理（MCP連携）"]
-        Jira["Jira / GitHub"]
+    subgraph repo_tasks["GitHub / タスク管理"]
+        Jira["Jira / GitHub Issues<br/>(MCP連携)"]
+        MD["Markdown仕様書"]
     end
-
     subgraph apispec["API仕様"]
         Apidog["Apidog<br/>AI Schema生成<br/>テストケース自動生成<br/>APIドキュメント公開"]
     end
 
-    subgraph github["GitHub"]
-        MD["Markdown仕様書"]
-    end
     Figma["Figma + Figma MCP"]
 
     subgraph ide["IDEレイヤー（コードの読み書き・UI上の差分レビュー）"]
@@ -107,15 +104,15 @@ graph TD
 
     Claude <-->|"仕様策定"| specs
     Claude <-->|"API設計支援"| apispec
-    cli <-->|"タスク取得・更新 (MCP)"| tasks
-    saas_agent <-->|"自律タスク取得"| tasks
+    cli <-->|"タスク取得・更新"| Jira
+    saas_agent <-->|"自律タスク取得"| Jira
     specs -->|"Markdown変換"| MD
     MD -->|"OpenAPI Import"| apispec
     apispec -->|"MCP Server"| cli
     MD -->|"仕様読み込み"| Figma
     Figma <-->|"Figma MCP"| cli
     MD -->|"仕様熟読・実装"| cli
-    github -->|"リポジトリ・仕様熟読"| saas_agent
+    repo_tasks -->|"リポジトリ・仕様熟読"| saas_agent
     cli <-->|"スキーマ参照・クエリ"| database
     cli -->|"コード生成・ローカル変更の連携"| ide
     ide -->|"差分レビュー・微修正・PR作成"| PR["Pull Request"]
