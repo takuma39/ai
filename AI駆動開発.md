@@ -76,9 +76,12 @@ graph TD
         NotionTool["Notion"]
     end
 
-    subgraph repo_tasks["GitHub / タスク管理"]
-        Jira["Jira / GitHub Issues<br/>(MCP連携)"]
+    subgraph github["GitHub"]
         MD["Markdown仕様書"]
+    end
+
+    subgraph tasks["タスク管理（MCP連携）"]
+        Jira["Jira / GitHub Issues"]
     end
     subgraph apispec["API仕様"]
         Apidog["Apidog<br/>AI Schema生成<br/>テストケース自動生成<br/>APIドキュメント公開"]
