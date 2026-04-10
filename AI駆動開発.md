@@ -115,10 +115,8 @@ graph TD
     MD -->|"仕様熟読・実装"| cli
     MD -->|"コード・仕様熟読"| saas_agent
     cli <-->|"スキーマ参照・クエリ"| database
-    cli -.->|"ローカルコード変更"| code["コードベース"]
-    ide -.->|"コード差分レビュー・微調整"| code
-    cli -->|"PR作成"| PR["Pull Request"]
-    ide -->|"PR作成/手動修正"| PR
+    cli -->|"コード生成・ローカル変更の連携"| ide
+    ide -->|"差分レビュー・微修正・PR作成"| PR["Pull Request"]
     saas_agent -->|"自動PR作成"| PR
 ```
 
