@@ -60,6 +60,8 @@ AIを活用した開発手法・ツールに関する技術資料を作成・管
 | `fact-checker` | 事実関係のWeb検証 | sonnet | WebSearch, Read |
 | `senior-engineer-reviewer` | ベテラン視点の実用性レビュー | opus | Read, Glob |
 | `doc-writer` | セクション執筆・改善 | sonnet | Read, Edit, Write, Glob, WebSearch |
+| `skill-architect` | スキルファイルの設計・生成 | sonnet | Read, Write, Edit, Glob |
+| `readme-updater` | README.md をスキル構成に同期 | sonnet | Read, Edit, Glob |
 
 ### モデル選択の基準
 
@@ -99,6 +101,9 @@ AIを活用した開発手法・ツールに関する技術資料を作成・管
 | `/research [トピック]` | Web調査 + ファクトチェック | research-agent + fact-checker |
 | `/add-section [トピック]` | 調査→執筆→レビューの一貫フロー | research-agent → doc-writer → doc-reviewer |
 | `/new-doc [テーマ]` | ゼロからドキュメント生成 | research-agent → doc-writer → 全レビューエージェント |
+| `/create-skill [タイプ] [名前]` | agent/command/knowledge を新規作成・更新 | skill-architect → readme-updater |
+| `/update-readme` | README.md をスキル構成に同期 | readme-updater |
+| `/update-doc [セクション名]` | 既存セクションを最新情報で更新 | research-agent + fact-checker → doc-writer → doc-reviewer |
 
 ---
 
