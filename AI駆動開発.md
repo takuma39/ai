@@ -322,10 +322,7 @@ graph TD
         PostMortem["📋 インシデントレポート自動生成<br/>（Claude Code + Slack MCP）"]
     end
 
-    subgraph report["定期レポート"]
-        WeeklyReport["週次レポート<br/>デプロイ頻度・障害件数・MTTR"]
-        CostReport["LLMコストレポート<br/>（Bedrock Guardrails）"]
-    end
+
 
     Approved --> Build
     Build -->|"成功"| AutoTest
@@ -342,10 +339,8 @@ graph TD
     Triage -->|"修正が必要"| Fix
     Fix -->|"修正PR"| cicd
     Triage & Fix --> PostMortem
-
-    Prod -.->|"メトリクス収集"| WeeklyReport
-    Prod -.->|"コスト集計"| CostReport
 ```
+
 
 **インシデント対応フロー詳細**
 
@@ -358,20 +353,7 @@ graph TD
 | ロールバック | GitHub Actions | 修正が間に合わない場合は自動ロールバック発動 |
 | レポート | Claude Code + Slack MCP | インシデントレポート（事象・原因・対策・再発防止策）を自動生成 |
 
-**定期レポートの自動生成**
 
-```text
-# 週次インフラレポート生成プロンプト例（Datadog MCP + Slack MCP）
-Datadog MCP から過去7日間の以下メトリクスを取得し、
-週次インフラレポートをMarkdown形式で作成してください。
-
-- デプロイ頻度・成功率
-- インシデント件数・MTTR（平均復旧時間）
-- エラーレートの推移（p50/p95/p99）
-- LLMコスト使用量（Bedrock）
-
-作成後、Slack MCP で #infra-report チャンネルに投稿してください。
-```
 
 #### ③ セキュリティ・ガバナンスフロー
 
