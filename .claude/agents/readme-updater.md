@@ -15,7 +15,7 @@ model: claude-sonnet-4-6
 以下を全て読み取る:
 1. `README.md`（現在の内容）
 2. `CLAUDE.md`（コマンド・エージェント定義の正式リスト）
-3. `.claude/commands/*.md`（全コマンドファイル）
+3. `.claude/skills/*/SKILL.md`（全コマンドファイル）
 4. `.claude/agents/*.md`（全エージェントファイル）
 
 ### ステップ2: 差分検出
@@ -24,9 +24,9 @@ model: claude-sonnet-4-6
 
 | チェック対象 | 確認方法 |
 |---|---|
-| コマンドの追加・削除 | commands/ のファイル ↔ README のスラッシュコマンド表 |
+| コマンドの追加・削除 | skills/*/SKILL.md のファイル ↔ README のスラッシュコマンド表 |
 | エージェントの追加・削除 | agents/ のファイル ↔ README のエージェント表 |
-| コマンドの説明変更 | commands/*.md の内容 ↔ README の表の説明 |
+| コマンドの説明変更 | skills/*/SKILL.md の内容 ↔ README の表の説明 |
 | 呼び出しチェーンの変更 | CLAUDE.md ↔ README の「呼び出されるエージェント」列 |
 
 ### ステップ3: README の更新

@@ -11,7 +11,7 @@ model: claude-sonnet-4-6
 ## 作業前の必須確認（毎回実行）
 
 1. `.claude/agents/*.md` を全て読み、既存エージェントのパターンを把握する
-2. `.claude/commands/*.md` を全て読み、既存コマンドのパターンを把握する
+2. `.claude/skills/*/SKILL.md` を全て読み、既存コマンドのパターンを把握する
 3. `.claude/skills/*.md` を全て読み、既存ナレッジのパターンを把握する
 4. `CLAUDE.md` を読み、エージェント委譲ルール・モデル選択基準を確認する
 
@@ -48,7 +48,7 @@ tools 選択基準:
 
 ### タイプ2: command（スラッシュコマンド定義）
 
-保存先: `.claude/commands/[name].md`
+保存先: `.claude/skills/[name]/SKILL.md`
 
 フォーマット:
 ```markdown
@@ -89,7 +89,7 @@ tools 選択基準:
 
 1. **CLAUDE.md の更新**:
    - agent を追加した場合 → 「エージェント一覧とモデル割り当て」テーブルに追記
-   - command を追加した場合 → 「スラッシュコマンド」テーブルに追記
+   - command を追加した場合（`skills/[name]/SKILL.md`）→ 「スラッシュコマンド」テーブルに追記
 
 2. **変更サマリーを報告**:
    - 作成/更新したファイルのパス

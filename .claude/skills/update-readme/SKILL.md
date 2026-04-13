@@ -6,7 +6,7 @@ README.md を現在のスキル構成・コマンド定義に同期します。
 
 **readme-updater** サブエージェントを呼び出し、以下を実行させる：
 
-1. `README.md`・`CLAUDE.md`・`.claude/commands/*.md`・`.claude/agents/*.md` を全て読む
+1. `README.md`・`CLAUDE.md`・`.claude/skills/*/SKILL.md`・`.claude/agents/*.md` を全て読む
 2. 差分を検出（追加・削除・変更）
 3. README の該当セクションのみ更新（他のセクションは変更しない）
 4. 変更サマリーを報告

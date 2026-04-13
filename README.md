@@ -13,14 +13,6 @@ AI駆動開発/
 ├── CLAUDE.md                   # Claude Code の設定・規約・エージェント定義
 ├── .mcp.json                   # MCP サーバー設定（Context7 等）
 └── .claude/
-    ├── commands/               # スラッシュコマンド定義
-    │   ├── review.md           # /review
-    │   ├── research.md         # /research
-    │   ├── add-section.md      # /add-section
-    │   ├── new-doc.md          # /new-doc
-    │   ├── create-skill.md     # /create-skill（新規）
-    │   ├── update-readme.md    # /update-readme（新規）
-    │   └── update-doc.md       # /update-doc（新規）
     ├── agents/                 # サブエージェント定義
     │   ├── doc-writer.md
     │   ├── doc-reviewer.md
@@ -28,9 +20,16 @@ AI駆動開発/
     │   ├── research-agent.md
     │   ├── fact-checker.md
     │   ├── senior-engineer-reviewer.md
-    │   ├── skill-architect.md  # スキル設計担当（新規）
-    │   └── readme-updater.md   # README同期担当（新規）
-    └── skills/                 # エージェント共有ナレッジ
+    │   ├── skill-architect.md
+    │   └── readme-updater.md
+    └── skills/                 # スラッシュコマンド & 共有ナレッジ
+        ├── review/SKILL.md         # /review
+        ├── research/SKILL.md       # /research
+        ├── add-section/SKILL.md    # /add-section
+        ├── new-doc/SKILL.md        # /new-doc
+        ├── update-doc/SKILL.md     # /update-doc
+        ├── create-skill/SKILL.md   # /create-skill
+        ├── update-readme/SKILL.md  # /update-readme
         ├── doc-standards.md        # 書式・Mermaid記法・文体ガイド
         ├── research-patterns.md    # 調査パターン・情報源優先順位
         └── ai-usecase-templates.md # セクション執筆用テンプレート集
