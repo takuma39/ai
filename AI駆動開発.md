@@ -21,13 +21,11 @@ AIを活用して要件定義から実装・テストまでの開発プロセス
 
 ## AI駆動開発の仕組み
 
-本ドキュメントでは、AI（Claude Code）を中心に据えた開発手法を体系的に解説します。要件定義・設計・実装・テスト・運用の各フェーズで AI をどう活用するか、ツールの選び方・プロンプトの書き方・チームへの展開方法をまとめています。
+### 概要
 
-AI駆動開発を支える主要な仕組みとして **MCP**（外部ツール連携）と **skills / sub-agent**（役割分担されたエージェント活用）があります。詳細なツール連携フローは後述の「ツール連携図」を参照してください。
+AI（Claude Code）を中心に据えた開発手法を体系的に解説します。要件定義・設計・実装・テスト・運用の各フェーズで AI をどう活用するか、ツールの選び方・プロンプトの書き方・チームへの展開方法をまとめています。
 
-### skills と sub-agent の活用
-
-`.claude/skills/` に置いた共有ナレッジを各 sub-agent が読み込み、役割ごとに並列実行する仕組み。Claude Code（メインエージェント）は指示を受けると、必要な skills を参照しつつ適切な sub-agent に委譲し、成果物をまとめて返す。
+AI駆動開発を支える主要な仕組みは **skills**・**sub-agent**・**MCP** の3つです。skills が「知識の提供」、sub-agent が「処理の実行」を担い、組み合わせることで Claude Code が高品質な成果物を返す。
 
 ```mermaid
 flowchart LR
@@ -35,15 +33,35 @@ flowchart LR
 
     CC --> Skills["📚 skills<br/>（共有ナレッジ）"]
 
-    Skills --> SA1["research-agent<br/>最新情報の調査"]
-    Skills --> SA2["doc-writer<br/>ドキュメント執筆"]
-    Skills --> SA3["fact-checker<br/>事実関係の検証"]
-    Skills --> SA4["senior-engineer-reviewer<br/>実装妥当性レビュー"]
+    subgraph SubAgents["🤖 sub-agents（並列実行）"]
+        SA1["research-agent<br/>最新情報の調査"]
+        SA2["doc-writer<br/>ドキュメント執筆"]
+        SA3["fact-checker<br/>事実関係の検証"]
+        SA4["senior-engineer-reviewer<br/>実装妥当性レビュー"]
+    end
+
+    Skills --> SubAgents
 
     SA1 & SA2 & SA3 & SA4 --> Output["📄 成果物"]
 ```
 
-#### Skills の分類
+---
+
+### skills とは
+
+`.claude/skills/` に配置する**共有ナレッジファイル**。Claude Code（メインエージェント）と sub-agent が参照することで、文体・規約・タスク手順をプロジェクト全体で統一する。
+
+```mermaid
+flowchart LR
+    subgraph SkillsDir[".claude/skills/"]
+        K["doc-standards.md<br/>（knowledge）"]
+        C["review.md<br/>（command）"]
+        T["ai-usecase-templates.md<br/>（template）"]
+    end
+
+    CC["Claude Code"] -->|Read| SkillsDir
+    SA["sub-agent"] -->|Read| SkillsDir
+```
 
 | 種別 | 例 | 用途 |
 |---|---|---|
@@ -51,7 +69,41 @@ flowchart LR
 | **command**（手順） | `review.md`、`spec.md` | 繰り返し実行するタスクフローの定義 |
 | **template**（テンプレート） | `ai-usecase-templates.md` | ドキュメント・プロンプトの雛形 |
 
-#### Skills vs Sub-agent の使い分け
+#### 活用方法
+
+- CLAUDE.md の肥大化を防ぐため、**特定ドメインの知識や手順は skills ファイルに切り出す**
+- sub-agent に Read させることで、文体や規約の統一が自動的に担保される
+- プロンプト内で `@.claude/skills/doc-standards.md` のように参照し、任意のタイミングで読み込ませられる
+
+---
+
+### sub-agent とは
+
+`.claude/agents/` に定義する、**役割特化した独立エージェント**。メインの Claude Code セッションとはコンテキストが隔離されており、並列実行しても互いに干渉しない。
+
+```mermaid
+flowchart TB
+    CC["Claude Code<br/>（メインセッション）"]
+
+    subgraph Isolated["🔒 隔離されたコンテキスト（並列実行）"]
+        SA1["research-agent"]
+        SA2["doc-writer"]
+        SA3["fact-checker"]
+    end
+
+    CC -->|委譲| Isolated
+    Isolated -->|成果物を返す| CC
+```
+
+#### 活用方法
+
+- **コンテキスト保護**：大量のファイル調査など重い処理を外注し、メインセッションを汚染しない
+- **並列実行**：research-agent と fact-checker を同時に走らせ、成果物を高速に生成する
+- **役割特化**：セキュリティレビュー・テスト生成など、観点を固定した専門エージェントを定義できる
+
+---
+
+### skills と sub-agent の違い
 
 | | Skills | Sub-agent |
 |---|---|---|
@@ -64,9 +116,15 @@ flowchart LR
 > - skills は全 sub-agent の**共通知識**として機能し、文体・規約・調査手順を統一する
 > - sub-agent はコンテキストが**隔離**されているため、並列実行しても互いに干渉しない
 
-### MCP の活用
+---
 
-MCP（Model Context Protocol）は、AIエージェントが外部ツールやデータソースに接続するための標準プロトコル。Claude Code は MCP サーバー経由で GitHub・Jira・Figma・Slack などをリアルタイムに参照・操作できる。
+### MCP とは
+
+**Model Context Protocol**。AIエージェントが外部ツールやデータソースに接続するための標準プロトコル。2025年12月に Linux Foundation 傘下（AAIF）へ移管され、AI業界のデファクトスタンダードとなった。
+
+#### 活用方法
+
+Claude Code は MCP サーバー経由で GitHub・Jira・Figma・Slack などをリアルタイムに参照・操作できる。
 
 ```mermaid
 flowchart LR
