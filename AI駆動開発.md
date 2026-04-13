@@ -63,70 +63,41 @@ AIを活用して要件定義から実装・テストまでの開発プロセス
 >
 > どちらを選んでも、**Claude Code（CLI）は併用可能**。Claude Code はターミナル上で動作するため、IDE側の補完とは競合しない。
 
-### AI活用の全体アーキテクチャ
+### skills と sub-agent の活用
 
-Claude Code を中核エージェントとして、**MCP サーバー**（AIと外部ツールをつなぐ標準プロトコル）が外部ツールとのリアルタイム接続を担う。さらに **skills**（共有ナレッジ）と **sub-agent**（コンテキストを分離して並列実行される役割特化エージェント）を組み合わせることで、要件定義から運用まで一貫した自動化・高速化が実現する。
+`.claude/skills/` に置いた共有ナレッジを各 sub-agent が読み込み、役割ごとに並列実行する仕組み。Claude Code（メインエージェント）は指示を受けると、必要な skills を参照しつつ適切な sub-agent に委譲し、成果物をまとめて返す。
 
 ```mermaid
-flowchart TD
-    Human["👤 エンジニア<br/>（指示・コンテキスト）"]
+flowchart LR
+    Human["👤 エンジニア"] --> CC["Claude Code<br/>（メインエージェント）"]
 
-    subgraph CoreAgent["中核エージェント"]
-        CC["Claude Code<br/>（メインエージェント）"]
-    end
+    CC --> Skills["📚 skills<br/>（共有ナレッジ）"]
 
-    subgraph MCP["MCP層（外部ツール接続）"]
-        MCPGitHub["GitHub MCP"]
-        MCPFigma["Figma MCP"]
-        MCPJira["Jira MCP"]
-        MCPSlack["Slack MCP"]
-    end
+    Skills --> SA1["research-agent<br/>最新情報の調査"]
+    Skills --> SA2["doc-writer<br/>ドキュメント執筆"]
+    Skills --> SA3["fact-checker<br/>事実関係の検証"]
+    Skills --> SA4["senior-engineer-reviewer<br/>実装妥当性レビュー"]
 
-    subgraph Skills["skills層（共有ナレッジ）"]
-        S1["ドキュメント規約"]
-        S2["調査パターン"]
-        S3["ユースケーステンプレート"]
-    end
-
-    subgraph SubAgents["sub-agent層（役割分担）"]
-        SA1["research-agent"]
-        SA2["doc-writer"]
-        SA3["fact-checker"]
-        SA4["senior-engineer-reviewer"]
-    end
-
-    Output["📄 成果物<br/>（コード・ドキュメント・レビュー）"]
-
-    Human --> CC
-    CC <--> MCPGitHub & MCPFigma & MCPJira & MCPSlack
-    CC --> S1 & S2 & S3
-    CC --> SA1 & SA2 & SA3 & SA4
-    SA1 & SA2 & SA3 & SA4 --> Output
-    CC --> Output
+    SA1 & SA2 & SA3 & SA4 --> Output["📄 成果物"]
 ```
 
-各層の連携イメージ（新機能実装を例に）：
+> - skills は全 sub-agent の**共通知識**として機能し、文体・規約・調査手順を統一する
+> - sub-agent はコンテキストが**隔離**されているため、並列実行しても互いに干渉しない
 
-```text
-# MCP + sub-agent を組み合わせた新機能実装の例
+### MCP の活用
 
-1. GitHub MCP でイシュー・PR コンテキストを取得
-   → Claude Code が仕様を解析
+MCP（Model Context Protocol）は、AIエージェントが外部ツールやデータソースに接続するための標準プロトコル。Claude Code は MCP サーバー経由で GitHub・Jira・Figma・Slack などをリアルタイムに参照・操作できる。
 
-2. skills/ai-usecase-templates.md を参照しながら
-   → research-agent が最新技術情報を調査（並列実行）
-
-3. doc-writer が設計ドキュメントを生成
-   → fact-checker が数値・仕様の正確性を検証（並列実行）
-
-4. senior-engineer-reviewer が実装妥当性をレビュー
-   → 承認後、Figma MCP・Slack MCP で関係者に通知
+```mermaid
+flowchart LR
+    CC["Claude Code"] <-->|MCP| GitHub["GitHub<br/>（PR・Issue）"]
+    CC <-->|MCP| Jira["Jira<br/>（チケット）"]
+    CC <-->|MCP| Figma["Figma<br/>（デザイン）"]
+    CC <-->|MCP| Slack["Slack<br/>（通知・承認）"]
 ```
 
-> **各層のポイント**
-> - **MCP層**：リアルタイムで外部ツールの状態を参照するため、知識カットオフに縛られない
-> - **skills層**：`.claude/skills/` 内のナレッジファイルは全エージェント間で共有される共通知識として機能する
-> - **sub-agent層**：それぞれがコンテキスト隔離されて並列実行されるため、メインの会話コンテキストを汚染せず、大規模タスクでも品質を保てる
+> - MCP 経由の情報は**リアルタイム取得**のため、AI の知識カットオフに縛られない
+> - 詳細なツール連携フローは次の「ツール連携図」を参照
 
 ### ツール連携図
 
