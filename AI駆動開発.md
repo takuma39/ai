@@ -167,6 +167,45 @@ flowchart LR
 
 > 開発フローの各フェーズに対応するツール連携を示す。セキュリティ・ガバナンスはすべてのフェーズに横断的に適用される。
 
+#### 全体フロー図
+
+```mermaid
+flowchart TD
+    A["1. 要件定義・仕様書作成<br/>(Spec-Driven Development)"] --> B["2. アーキテクチャ設計<br/>(CLAUDE.md / .cursor/rules)"]
+    B --> C["3. UI/UXデザイン<br/>(Figma MCP via Claude Code)"]
+    C --> D["4. 実装<br/>(Claude Code主体 / IDEは微修正・レビュー)"]
+    D --> T["テスト作成・実行<br/>(Playwright / Vitest)"]
+    T -->|"失敗"| D
+    T -->|"成功"| E["5. コードレビュー<br/>(Copilot + Claude Code + 人間)"]
+    E -->|修正| D
+    E -->|承認| F["6. CI/CD<br/>(GitHub Actions)"]
+    F -->|デプロイ| G["7. 本番運用・監視<br/>(Datadog)"]
+    G -->|"アラート (Slack)"| H{"インシデント?"}
+    H -->|"AI調査・修正"| D
+    H -->|"正常"| I["リリース完了"]
+
+    D2["Devin<br/>(Slack / GitHub経由)"] -.->|"自律タスク実行"| T
+    D2 -.->|"自動PR作成"| E
+    style D2 fill:#2d3748,stroke:#4a5568,color:#e2e8f0
+```
+
+> **Devinの位置づけ**：Devinはメインの開発フローと並行して動く自律エージェントです。Slack や GitHub Issue 経由でタスクを受け取り、独立して実装・テスト・PR作成まで行います（詳細は 4.4 参照）。
+
+#### 各フェーズの成果物と完了条件
+
+| フェーズ        | 成果物                   | 完了条件                               | よくある失敗                | 主なMCP用途（※Claude Code経由を推奨） |
+| --------------- | ------------------------ | -------------------------------------- | --------------------------- | ------------------------------------- |
+| 要件定義        | `SPEC.md`                | 受け入れ基準と非機能要件が記載済み     | 曖昧な目標のまま実装開始    | 仕様書の連携管理（Notion MCP）、API仕様連携（Apidog MCP） |
+| 設計            | `CLAUDE.md` / ルール定義 | 変更方針と制約が合意済み               | 既存制約を無視した設計      | 既存スキーマ調査（DB MCP）            |
+| UI/UXデザイン   | Figma デザインファイル + デザイントークン（tokens.json） | Figma MCP連携済み + デザイントークンがコードに反映済み | スペックなしにFigmaで作り込み開始 | Figma MCP、Framelink MCP              |
+| 実装            | 実装PR                   | テスト成功 + 仕様準拠（Apidog MCP 導入時は API仕様差分が解消済み） | 1セッションに複数課題を混在 | タスク取得（GitHub/Jira MCP）、DB MCP、Apidog MCP（仕様差分検知） |
+| テスト          | テスト結果 + 視覚差分レポート | 自動テスト全件通過 + UI 視覚差分が許容範囲内 | E2Eテストの未整備           | Playwright MCP、Figma MCP（視覚一致検証） |
+| レビュー        | レビュー記録             | Copilot + Claude Code + 人間承認       | AIレビューのみでマージ      | GitHub MCP（PR差分取得）              |
+| CI/CD           | デプロイ完了             | デプロイ成功 + ロールバック手順を確認  | 自動化だけ導入し監視未整備  | ―                                     |
+| 運用・監視      | インシデント対応記録     | アラート設定 + 対応フロー確認済み      | 監視未設定でリリース        | Datadog MCP、Slack MCP                |
+
+---
+
 #### ① 要件定義・設計フェーズ
 
 ```mermaid
@@ -202,6 +241,16 @@ graph TD
     github -->|"仕様熟読"| cli
     apispec -->|"MCP Server"| cli
 ```
+
+**要件定義・設計フロー詳細**
+
+| ステップ | 担当 | アクション |
+|---|---|---|
+| 要件ヒアリング | Claude（AskUserQuestion） | 対話型インタビューで要件の穴を洗い出す |
+| 仕様書作成 | Claude + Excel / Notion MCP | BDD形式で仕様書を起草・MCP経由で書き出し |
+| API設計 | Apidog AI | Schema自動生成・命名提案・準拠性チェック |
+| 仕様書レビュー | Claude Code | SPEC.md の網羅性・矛盾チェック |
+| タスク分解 | Claude Code + Jira / GitHub MCP | 仕様からタスクを自動生成・チケット化 |
 
 ---
 
@@ -250,6 +299,17 @@ graph TD
     saas_agent <-->|"自律タスク取得"| tasks
 ```
 
+**実装フロー詳細**
+
+| ステップ | 担当 | アクション |
+|---|---|---|
+| デザイン取得 | Claude Code + Figma MCP | Figma からデザイントークン・コンポーネント仕様を取得 |
+| コード生成 | Claude Code | SPEC.md + CLAUDE.md を参照して実装コードを生成 |
+| DB操作 | Claude Code + Postgres MCP | スキーマ参照・マイグレーション生成 |
+| IDE連携 | Cursor / VS Code + Copilot | 差分レビュー・微修正・フォーマット |
+| PR作成 | IDE / Devin | 変更差分のPR作成・レビュー依頼 |
+
+---
 
 #### ③ テストフェーズ
 
@@ -299,6 +359,16 @@ graph TD
     e2e_test -->|"テスト失敗"| impl
     review -->|"修正依頼"| impl
 ```
+
+**テストフロー詳細**
+
+| ステップ | 担当 | アクション |
+|---|---|---|
+| レビュー | Copilot + Claude Code + 人間 | PR自動レビュー → 仕様整合性レビュー → 最終承認 |
+| 単体テスト | Claude Code + Vitest | テストケース自動生成・関数単位の検証 |
+| 結合テスト | Apidog + Postgres MCP | APIエンドポイント検証・DB整合性確認 |
+| E2Eテスト | Claude Code + Playwright MCP | シナリオ自動生成・ブラウザ実行・Visual Diff |
+| テスト失敗時 | Claude Code | エラーログ解析・修正コード提案・再実行 |
 
 **Playwright MCP による E2E 自動化の流れ**
 
@@ -422,6 +492,15 @@ graph TD
 
 > **※AIゲートウェイの適用範囲**：ゲートウェイが保護できるのは「自社アプリ/コードからLLM APIを呼ぶ」経路のみ。GitHub Copilotなどの外部SaaSはそれぞれが直接LLMを呼ぶため、ゲートウェイでは介入できない。詳細は `9.6` を参照。
 
+**セキュリティフロー詳細**
+
+| ステップ | 担当 | アクション |
+|---|---|---|
+| プロンプトフィルタ | AWS Bedrock Guardrails | 機密情報のマスキング・不正プロンプトのブロック |
+| コミットスキャン | Secret Scanning / SAST | シークレット漏洩・脆弱性の検出 |
+| コスト制御 | AIゲートウェイ | LLM API の利用量ログ・コスト上限設定 |
+| SaaS型エージェント | Devin / Copilot | ゲートウェイ経由不可のため、個別にアクセス制御を設定 |
+
 ---
 
 #### ⑥ UX解析・継続的改善フェーズ（デプロイ後）
@@ -455,46 +534,15 @@ graph TD
     Figma -.->|"次スプリントの<br/>デザイン改修へ"| ClaudeCode
 ```
 
----
+**UX解析フロー詳細**
 
-## 開発フロー
-
-### 全体フロー図
-
-```mermaid
-flowchart TD
-    A["1. 要件定義・仕様書作成<br/>(Spec-Driven Development)"] --> B["2. アーキテクチャ設計<br/>(CLAUDE.md / .cursor/rules)"]
-    B --> C["3. UI/UXデザイン<br/>(Figma MCP via Claude Code)"]
-    C --> D["4. 実装<br/>(Claude Code主体 / IDEは微修正・レビュー)"]
-    D --> T["テスト作成・実行<br/>(Playwright / Vitest)"]
-    T -->|"失敗"| D
-    T -->|"成功"| E["5. コードレビュー<br/>(Copilot + Claude Code + 人間)"]
-    E -->|修正| D
-    E -->|承認| F["6. CI/CD<br/>(GitHub Actions)"]
-    F -->|デプロイ| G["7. 本番運用・監視<br/>(Datadog)"]
-    G -->|"アラート (Slack)"| H{"インシデント?"}
-    H -->|"AI調査・修正"| D
-    H -->|"正常"| I["リリース完了"]
-
-    D2["Devin<br/>(Slack / GitHub経由)"] -.->|"自律タスク実行"| T
-    D2 -.->|"自動PR作成"| E
-    style D2 fill:#2d3748,stroke:#4a5568,color:#e2e8f0
-```
-
-> **Devinの位置づけ**：Devinはメインの開発フローと並行して動く自律エージェントです。Slack や GitHub Issue 経由でタスクを受け取り、独立して実装・テスト・PR作成まで行います（詳細は 4.4 参照）。
-
-### 各フェーズの成果物と完了条件
-
-| フェーズ        | 成果物                   | 完了条件                               | よくある失敗                | 主なMCP用途（※Claude Code経由を推奨） |
-| --------------- | ------------------------ | -------------------------------------- | --------------------------- | ------------------------------------- |
-| 要件定義        | `SPEC.md`                | 受け入れ基準と非機能要件が記載済み     | 曖昧な目標のまま実装開始    | 仕様書の連携管理（Notion MCP）、API仕様連携（Apidog MCP） |
-| 設計            | `CLAUDE.md` / ルール定義 | 変更方針と制約が合意済み               | 既存制約を無視した設計      | 既存スキーマ調査（DB MCP）            |
-| UI/UXデザイン   | Figma デザインファイル + デザイントークン（tokens.json） | Figma MCP連携済み + デザイントークンがコードに反映済み | スペックなしにFigmaで作り込み開始 | Figma MCP、Framelink MCP              |
-| 実装            | 実装PR                   | テスト成功 + 仕様準拠（Apidog MCP 導入時は API仕様差分が解消済み） | 1セッションに複数課題を混在 | タスク取得（GitHub/Jira MCP）、DB MCP、Apidog MCP（仕様差分検知） |
-| テスト          | テスト結果 + 視覚差分レポート | 自動テスト全件通過 + UI 視覚差分が許容範囲内 | E2Eテストの未整備           | Playwright MCP、Figma MCP（視覚一致検証） |
-| レビュー        | レビュー記録             | Copilot + Claude Code + 人間承認       | AIレビューのみでマージ      | GitHub MCP（PR差分取得）              |
-| CI/CD           | デプロイ完了             | デプロイ成功 + ロールバック手順を確認  | 自動化だけ導入し監視未整備  | ―                                     |
-| 運用・監視      | インシデント対応記録     | アラート設定 + 対応フロー確認済み      | 監視未設定でリリース        | Datadog MCP、Slack MCP                |
+| ステップ | 担当 | アクション |
+|---|---|---|
+| データ収集 | Amplitude / Mixpanel / GA4 | ユーザー行動ログ・フラストレーション検知 |
+| データ分析 | Analytics MCP + Claude Code | 離脱原因・スコア解析をプロンプトで調査 |
+| 改善案生成 | Claude Code | UIの修正コード・改善案を自動生成 |
+| フィードバック | SPEC.md / Figma | 仕様・デザインに課題をフィードバック |
+| 次スプリント | Claude Code | データに基づく要件・デザインの改修を実行 |
 
 ---
 
