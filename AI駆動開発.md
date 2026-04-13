@@ -225,7 +225,7 @@ graph TD
     saas_agent -->|"自動PR作成"| PR
 ```
 
-#### ② レビュー・CI/CD・運用フロー
+#### ②-A レビュー・テストフェーズ
 
 ```mermaid
 graph TD
@@ -233,45 +233,144 @@ graph TD
 
     subgraph impl["実装・コード生成"]
         CC["Claude Code"]
-    end
-
-    subgraph saas_agent["クラウド型自律エージェント"]
-        Devin["Devin"]
+        Devin["Devin<br/>（クラウド型自律エージェント）"]
     end
 
     subgraph review["レビュー"]
         Copilot["GitHub Copilot<br/>PR自動レビュー"]
         ClaudeRev["Claude Code<br/>仕様整合性レビュー<br/>(GitHub MCP)"]
+        Human["👤 人間レビュー<br/>最終承認"]
     end
 
-    subgraph testing["テスト自動化"]
-        PW["Playwright MCP<br/>E2Eテスト自動生成"]
+    subgraph unit_test["単体テスト（Unit Test）"]
+        Vitest["Vitest<br/>関数・ロジック単位の検証"]
+        ClaudeUnit["Claude Code<br/>テストケース自動生成"]
     end
 
-    subgraph cicd["CI/CD"]
-        GHActions["GitHub Actions"]
+    subgraph integration_test["結合テスト（Integration Test）"]
+        APITest["Apidog<br/>APIエンドポイント検証"]
+        DBTest["Postgres MCP<br/>DB操作・整合性確認"]
     end
 
-    subgraph monitoring["監視・運用（MCP連携）"]
-        Monitor["Datadog"]
+    subgraph e2e_test["E2Eテスト（Playwright MCP）"]
+        PW_Gen["Claude Code + Playwright MCP<br/>① テストシナリオ自動生成<br/>（仕様書から操作手順を生成）"]
+        PW_Run["Playwright<br/>② ブラウザ自動操作・実行"]
+        PW_Report["Visual Diff レポート<br/>③ スクリーンショット差分検出"]
     end
 
-    subgraph communication["コミュニケーション（MCP連携）"]
-        Slack["Slack"]
-    end
-
-    Prod["本番環境 / アプリ"]
+    Approved["✅ レビュー承認<br/>→ インフラフェーズへ"]
 
     PR --> review
-    impl <-->|"テスト生成・実行"| testing
-    saas_agent <-->|"テスト自動実行"| testing
-    review <-->|"CI自動チェック"| cicd
-    cicd -->|"デプロイ"| Prod
-    Prod -->|"エラー・メトリクス"| monitoring
-    monitoring -.->|"アラート通知"| communication
-    communication <-->|"調査指示・承認"| impl
-    communication <-->|"メンション依頼(@Devin)"| saas_agent
-    monitoring <-->|"ログ・メトリクス取得<br/>(インシデント調査)"| impl
+    impl -->|"コード生成・PR作成"| PR
+    review --> unit_test
+    unit_test --> integration_test
+    integration_test --> e2e_test
+
+    ClaudeUnit -->|"テスト自動生成"| Vitest
+    PW_Gen --> PW_Run --> PW_Report
+
+    e2e_test -->|"全テスト通過"| Approved
+    e2e_test -->|"テスト失敗"| impl
+    review -->|"修正依頼"| impl
+```
+
+**Playwright MCP による E2E 自動化の流れ**
+
+| ステップ | 操作 | Playwright MCP の役割 |
+|---|---|---|
+| ① シナリオ生成 | Claude Code が仕様書（SPEC.md）を読み込み | 操作ステップを自然言語 → テストコードに変換 |
+| ② テスト実行 | `playwright test` を CLI から自動実行 | ブラウザを起動しシナリオを再生 |
+| ③ 差分検出 | スクリーンショットをベースラインと比較 | Visual Diff レポートをリポジトリに保存 |
+| ④ 失敗時 | Claude Code がエラーログを解析 | 修正コードを提案 → 再実行 |
+
+```text
+# Playwright MCP テスト自動生成プロンプト例
+@SPEC.md を読み込んで、ログイン〜商品購入完了までの
+E2Eシナリオを Playwright のテストコードとして生成してください。
+- ページ遷移・入力・アサーションを含めること
+- エラーケース（必須入力漏れ・在庫切れ）も含めること
+- tests/e2e/ 配下に feature 別で保存すること
+```
+
+---
+
+#### ②-B インフラ・運用フェーズ
+
+```mermaid
+graph TD
+    Approved["✅ レビュー承認済みPR"]
+
+    subgraph cicd["CI/CD（GitHub Actions）"]
+        Build["ビルド・Lint・型チェック"]
+        AutoTest["自動テスト実行<br/>（Unit / Integration / E2E）"]
+        Deploy["デプロイ<br/>（Staging → Production）"]
+        Rollback["⚠️ ロールバック実行"]
+    end
+
+    Prod["🌐 本番環境 / アプリ"]
+
+    subgraph monitoring["監視（Datadog MCP連携）"]
+        Metrics["メトリクス監視<br/>CPU・メモリ・レイテンシ"]
+        Logs["ログ集約・エラー検知"]
+        Alert["🚨 アラート発火"]
+    end
+
+    subgraph incident["インシデント対応フロー"]
+        SlackAlert["Slack 通知<br/>（アラート内容 + 影響範囲）"]
+        Triage["Claude Code<br/>① Datadog MCP でログ・メトリクス取得<br/>② 根本原因を自動解析（RCA）"]
+        Fix["Claude Code / Devin<br/>③ 修正コード生成・PR作成"]
+        PostMortem["📋 インシデントレポート自動生成<br/>（Claude Code + Slack MCP）"]
+    end
+
+    subgraph report["定期レポート"]
+        WeeklyReport["週次レポート<br/>デプロイ頻度・障害件数・MTTR"]
+        CostReport["LLMコストレポート<br/>（Bedrock Guardrails）"]
+    end
+
+    Approved --> Build
+    Build -->|"成功"| AutoTest
+    AutoTest -->|"成功"| Deploy
+    AutoTest -->|"失敗"| Rollback
+    Deploy -->|"失敗"| Rollback
+    Deploy --> Prod
+
+    Prod --> Metrics & Logs
+    Metrics & Logs --> Alert
+
+    Alert --> SlackAlert
+    SlackAlert --> Triage
+    Triage -->|"修正が必要"| Fix
+    Fix -->|"修正PR"| cicd
+    Triage & Fix --> PostMortem
+
+    Prod -.->|"メトリクス収集"| WeeklyReport
+    Prod -.->|"コスト集計"| CostReport
+```
+
+**インシデント対応フロー詳細**
+
+| フェーズ | 担当 | アクション |
+|---|---|---|
+| 検知 | Datadog | SLO違反・レイテンシ異常・エラーレート急増を検知 |
+| 通知 | Slack MCP | アラート内容・影響範囲・発生時刻を自動投稿 |
+| トリアージ | Claude Code + Datadog MCP | ログ・トレースを取得し根本原因（RCA）を解析 |
+| 修正 | Claude Code / Devin | 修正コード生成・PR作成・レビュー依頼 |
+| ロールバック | GitHub Actions | 修正が間に合わない場合は自動ロールバック発動 |
+| レポート | Claude Code + Slack MCP | インシデントレポート（事象・原因・対策・再発防止策）を自動生成 |
+
+**定期レポートの自動生成**
+
+```text
+# 週次インフラレポート生成プロンプト例（Datadog MCP + Slack MCP）
+Datadog MCP から過去7日間の以下メトリクスを取得し、
+週次インフラレポートをMarkdown形式で作成してください。
+
+- デプロイ頻度・成功率
+- インシデント件数・MTTR（平均復旧時間）
+- エラーレートの推移（p50/p95/p99）
+- LLMコスト使用量（Bedrock）
+
+作成後、Slack MCP で #infra-report チャンネルに投稿してください。
 ```
 
 #### ③ セキュリティ・ガバナンスフロー
@@ -290,7 +389,7 @@ graph TD
     Prod["本番環境 / アプリ"]
 
     subgraph gateway["AIゲートウェイ"]
-        GWProxy["AWS Bedrock Guardrails<br/>PIIマスキング<br/>プロンプトフィルタ<br/>コスト管理・監査ログ"]
+        GWProxy["AWS Bedrock Guardrails"]
     end
 
     LLM["バックエンドLLM<br/>OpenAI / Claude<br/>Bedrock / Azure OpenAI"]
