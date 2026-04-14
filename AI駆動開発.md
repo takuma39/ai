@@ -173,7 +173,7 @@ flowchart LR
 flowchart TD
     A["1. 要件定義・仕様書作成<br/>(Spec-Driven Development)"] --> B["2. アーキテクチャ設計<br/>(CLAUDE.md / .cursor/rules)"]
     B --> TS["3. タスク分割<br/>(Claude Code + Jira / GitHub MCP)"]
-    TS --> C["4. UI/UXデザイン<br/>(Figma MCP via Claude Code)"]
+    TS --> C["4. UI/UXデザイン<br/>(Claude Code + Figma MCP)"]
     C --> D["5. 実装<br/>(Claude Code主体 / IDEは微修正・レビュー)"]
     D --> T["テスト作成・実行<br/>(Playwright / Vitest)"]
     T -->|"失敗"| D
