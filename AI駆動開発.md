@@ -172,14 +172,15 @@ flowchart LR
 ```mermaid
 flowchart TD
     A["1. 要件定義・仕様書作成<br/>(Spec-Driven Development)"] --> B["2. アーキテクチャ設計<br/>(CLAUDE.md / .cursor/rules)"]
-    B --> C["3. UI/UXデザイン<br/>(Figma MCP via Claude Code)"]
-    C --> D["4. 実装<br/>(Claude Code主体 / IDEは微修正・レビュー)"]
+    B --> TS["3. タスク分割<br/>(Claude Code + Jira / GitHub MCP)"]
+    TS --> C["4. UI/UXデザイン<br/>(Figma MCP via Claude Code)"]
+    C --> D["5. 実装<br/>(Claude Code主体 / IDEは微修正・レビュー)"]
     D --> T["テスト作成・実行<br/>(Playwright / Vitest)"]
     T -->|"失敗"| D
-    T -->|"成功"| E["5. コードレビュー<br/>(Copilot + Claude Code + 人間)"]
+    T -->|"成功"| E["6. コードレビュー<br/>(Copilot + Claude Code + 人間)"]
     E -->|修正| D
-    E -->|承認| F["6. CI/CD<br/>(GitHub Actions)"]
-    F -->|デプロイ| G["7. 本番運用・監視<br/>(Datadog)"]
+    E -->|承認| F["7. CI/CD<br/>(GitHub Actions)"]
+    F -->|デプロイ| G["8. 本番運用・監視<br/>(Datadog)"]
     G -->|"アラート (Slack)"| H{"インシデント?"}
     H -->|"AI調査・修正"| D
     H -->|"正常"| I["リリース完了"]
@@ -197,6 +198,7 @@ flowchart TD
 | --------------- | ------------------------ | -------------------------------------- | --------------------------- | ------------------------------------- |
 | 要件定義        | `SPEC.md`                | 受け入れ基準と非機能要件が記載済み     | 曖昧な目標のまま実装開始    | 仕様書の連携管理（Notion MCP）、API仕様連携（Apidog MCP） |
 | 設計            | `CLAUDE.md` / ルール定義 | 変更方針と制約が合意済み               | 既存制約を無視した設計      | 既存スキーマ調査（DB MCP）            |
+| タスク分割      | タスクチケット一覧（Jira / GitHub Issues） | 全タスクにストーリーポイント・優先度・依存関係が設定済み | 粒度が粗すぎて見積もり不能 / 依存関係の未整理 | Jira MCP、GitHub MCP（チケット自動生成） |
 | UI/UXデザイン   | Figma デザインファイル + デザイントークン（tokens.json） | Figma MCP連携済み + デザイントークンがコードに反映済み | スペックなしにFigmaで作り込み開始 | Figma MCP、Framelink MCP              |
 | 実装            | 実装PR                   | テスト成功 + 仕様準拠（Apidog MCP 導入時は API仕様差分が解消済み） | 1セッションに複数課題を混在 | タスク取得（GitHub/Jira MCP）、DB MCP、Apidog MCP（仕様差分検知） |
 | テスト          | テスト結果 + 視覚差分レポート | 自動テスト全件通過 + UI 視覚差分が許容範囲内 | E2Eテストの未整備           | Playwright MCP、Figma MCP（視覚一致検証） |
