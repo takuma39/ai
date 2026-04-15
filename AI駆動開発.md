@@ -142,6 +142,142 @@ flowchart LR
 
 ---
 
+### 3要素を組み合わせた開発ユースケース
+
+skills・sub-agent・MCP はそれぞれ単体でも機能するが、**3つを連結することで「指示 → 知識参照 → 並列実行 → 外部データ取得 → 成果物」の一貫したフロー**を構築できる。以下に開発工程別の代表的なユースケースを示す。
+
+#### 共通パターン
+
+```mermaid
+flowchart LR
+    H["👤 エンジニア<br/>「○○系のskillで△△して」"]
+    CC["Claude Code"]
+    SK["📚 Skills<br/>（手順・規約）"]
+    SA["🤖 専門 sub-agents<br/>（並列実行）"]
+    MCP["🔌 MCP Servers<br/>（外部データ）"]
+    OUT["📄 成果物"]
+
+    H --> CC
+    CC -->|Read| SK
+    SK -->|呼び出し規約| SA
+    SA <-->|リアルタイム取得| MCP
+    SA --> OUT
+```
+
+Skill に「どの sub-agent を起動し、どの MCP を呼ぶか」を記述することで、エンジニアは短い指示だけで定型フローを再現できる。
+
+#### ユースケース1：レビュー系（コード・ドキュメント品質保証）
+
+> 「**レビュー系 skill でこのPRをレビューして**」
+
+```mermaid
+flowchart LR
+    H["👤 指示"] --> CC["Claude Code"]
+    CC --> SK["skills/review.md<br/>レビュー観点・判定基準"]
+    SK --> FC["format-checker<br/>（書式）"]
+    SK --> DR["doc-reviewer<br/>（品質）"]
+    SK --> SE["senior-engineer-reviewer<br/>（実装妥当性）"]
+    FC & DR & SE <--> SR["Serena MCP<br/>symbol 単位で<br/>差分解析"]
+    FC & DR & SE <--> GH["GitHub MCP / gh CLI<br/>PR差分・コメント"]
+    FC & DR & SE --> OUT["📄 統合レビュー<br/>レポート"]
+```
+
+- **Skills**：レビュー観点・判定基準・フォーマット
+- **Sub-agent**：書式・品質・実装妥当性の3観点を**並列実行**
+- **MCP**：Serena で symbol-level 差分取得、GitHub MCP / gh CLI で PR 情報取得
+
+#### ユースケース2：リサーチ系（最新技術・仕様調査）
+
+> 「**リサーチ系 skill で Next.js 15 の最新 App Router 仕様を調べて**」
+
+```mermaid
+flowchart LR
+    H["👤 指示"] --> CC["Claude Code"]
+    CC --> SK["skills/research-patterns.md<br/>情報源の優先順位・<br/>信頼度基準"]
+    SK --> RA["research-agent<br/>（一次調査）"]
+    SK --> FK["fact-checker<br/>（事実検証）"]
+    RA & FK <--> C7["Context7 MCP<br/>最新公式ドキュメント"]
+    RA & FK <--> WS["WebSearch<br/>補完情報"]
+    RA & FK --> OUT["📄 調査レポート<br/>（出典付き）"]
+```
+
+- **Skills**：情報源の優先順位、一次/二次ソース判定、引用ルール
+- **Sub-agent**：調査と検証を**並列**で回し、相互に裏付け
+- **MCP**：Context7 で公式ドキュメントを実行時取得（知識カットオフを回避）
+
+#### ユースケース3：テスト系（テスト生成・E2E 検証）
+
+> 「**テスト系 skill でログイン機能の E2E テストを作って**」
+
+```mermaid
+flowchart LR
+    H["👤 指示"] --> CC["Claude Code"]
+    CC --> SK["skills/test-patterns.md<br/>テスト粒度・<br/>命名規約・AAA"]
+    SK --> TG["test-generator<br/>（シナリオ生成）"]
+    SK --> TR["test-runner<br/>（実行・失敗解析）"]
+    TG & TR <--> PW["Playwright MCP<br/>ブラウザ自動操作"]
+    TG & TR <--> AP["Apidog MCP<br/>API仕様参照"]
+    TG & TR <--> SR["Serena MCP<br/>対象関数取得"]
+    TG & TR --> OUT["📄 テストコード +<br/>実行レポート"]
+```
+
+- **Skills**：AAA（Arrange-Act-Assert）パターン、命名規約、カバレッジ基準
+- **Sub-agent**：生成と実行を分離、失敗時に自動修正ループ
+- **MCP**：Playwright でブラウザ操作、Apidog で仕様準拠を保証、Serena で対象関数の symbol を取得
+
+#### ユースケース4：実装系（機能追加・バグ修正）
+
+> 「**実装系 skill で Issue #123 を実装して PR を作って**」
+
+```mermaid
+flowchart LR
+    H["👤 指示"] --> CC["Claude Code"]
+    CC --> SK["skills/impl-patterns.md<br/>コーディング規約・<br/>PR作成ルール"]
+    SK --> IM["implementer<br/>（実装）"]
+    SK --> TG["test-generator<br/>（テスト同時生成）"]
+    IM & TG <--> GH["gh CLI<br/>Issue取得・PR作成"]
+    IM & TG <--> SR["Serena MCP<br/>既存コード理解"]
+    IM & TG <--> C7["Context7 MCP<br/>ライブラリ最新仕様"]
+    IM & TG <--> DB["Postgres MCP<br/>スキーマ参照"]
+    IM & TG --> OUT["📄 実装差分 + PR"]
+```
+
+- **Skills**：コーディング規約、テスト同時生成ルール、PR テンプレート
+- **Sub-agent**：実装とテスト生成を**並列**で走らせ、相互に依存を解決
+- **MCP**：gh CLI で Issue/PR、Serena で既存コード解析、Context7 で API 確認、Postgres でスキーマ参照
+
+#### ユースケース5：ドキュメント系（仕様書・READMEの執筆）
+
+> 「**ドキュメント系 skill で新機能のセクションを追加して**」
+
+```mermaid
+flowchart LR
+    H["👤 指示"] --> CC["Claude Code"]
+    CC --> SK["skills/doc-standards.md<br/>文体・見出し規約・<br/>Mermaid記法"]
+    SK --> RA["research-agent<br/>（調査）"]
+    SK --> DW["doc-writer<br/>（執筆）"]
+    SK --> DR["doc-reviewer<br/>（品質確認）"]
+    RA & DW & DR <--> C7["Context7 MCP<br/>最新ライブラリ仕様"]
+    RA & DW & DR <--> NT["Notion MCP<br/>社内ナレッジ"]
+    RA & DW & DR --> OUT["📄 ドキュメント差分"]
+```
+
+- **Skills**：文体・見出し階層・Mermaid 記法・引用ブロックの使い方
+- **Sub-agent**：調査 → 執筆 → レビューを**直列パイプライン**で実行
+- **MCP**：Context7 で公開ライブラリ、Notion MCP で社内仕様を参照
+
+#### ユースケース横断の設計原則
+
+| 層          | 書き方のコツ                                                 |
+| ----------- | ------------------------------------------------------------ |
+| **Skills**  | 「**いつ・なぜ・どの sub-agent / MCP を呼ぶか**」まで書く    |
+| **Sub-agent** | 役割を1つに絞り、成果物のフォーマットを固定する            |
+| **MCP**     | Skill で指名して呼ぶ。**必要なときだけ**接続する（9.4 参照） |
+
+> **ポイント**：上記のユースケース名（レビュー系・リサーチ系・テスト系・実装系・ドキュメント系）を **skill ファイル名の接頭辞として揃える**（例: `review-*.md`, `research-*.md`）と、エンジニアが「○○系でやって」と指示するだけで該当 skill 群が呼ばれる運用が実現する。詳細な連携パターンは `9.5 Skills × MCP の連携フロー` を参照。
+
+---
+
 ## 使用ツール
 
 | カテゴリ              | ツール                                        | 主な役割                                                   |
