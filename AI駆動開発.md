@@ -329,11 +329,14 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    A["1. 要件定義・仕様書作成<br/>(SPEC.md)"] --> B["2. 基本設計<br/>(BASIC_DESIGN.md)"]
+    A["1. 要件定義・仕様書作成<br/>(SPEC.md)"] --> M["デザインモック作成<br/>(Figma AI / v0.dev / Google Stitch)"]
+    M --> R["ステークホルダーレビュー"]
+    R -->|"フィードバック"| A
+    R -->|"合意"| B["2. 基本設計<br/>(BASIC_DESIGN.md)"]
     B --> B2["3. 詳細設計<br/>(DETAIL_DESIGN.md)"]
     B2 --> B3["4. AI環境設定<br/>(CLAUDE.md + .claude/)"]
     B3 --> TS["タスク分割<br/>(Claude Code + Jira / GitHub MCP)"]
-    TS --> C["5. UI/UXデザイン<br/>(Claude Code + Figma MCP)"]
+    TS --> C["5. UI/UXデザイン<br/>(Figma + デザインシステム)"]
     C --> D["6. 実装<br/>(Claude Code主体 / IDEは微修正・レビュー)"]
     D --> T["8. テスト作成・実行<br/>(Playwright / Vitest)"]
     T -->|"失敗"| D
@@ -421,6 +424,7 @@ graph TD
     subgraph mock["モック生成"]
         FigmaAI["Figma AI<br/>（Make Designs）"]
         V0["v0.dev<br/>（Vercel）"]
+        Stitch["Google Stitch"]
     end
 
     Review["👥 ステークホルダーレビュー"]
