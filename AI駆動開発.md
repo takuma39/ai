@@ -355,7 +355,24 @@ flowchart TD
 
     D2["Devin<br/>(Slack / GitHub経由)"] -.->|"自律タスク実行"| T
     D2 -.->|"自動PR作成"| E
-    style D2 fill:#2d3748,stroke:#4a5568,color:#e2e8f0
+    style A fill:#f5f5f5,stroke:#6c757d,color:#000
+    style M fill:#ede9fe,stroke:#7c3aed,color:#000
+    style R fill:#ffedd5,stroke:#ea580c,color:#000
+    style B fill:#f5f5f5,stroke:#6c757d,color:#000
+    style B2 fill:#f5f5f5,stroke:#6c757d,color:#000
+    style B3 fill:#f5f5f5,stroke:#6c757d,color:#000
+    style TS fill:#ede9fe,stroke:#7c3aed,color:#000
+    style C fill:#ede9fe,stroke:#7c3aed,color:#000
+    style D fill:#dbeafe,stroke:#2563eb,color:#000
+    style E fill:#ffedd5,stroke:#ea580c,color:#000
+    style T fill:#ede9fe,stroke:#7c3aed,color:#000
+    style F fill:#ede9fe,stroke:#7c3aed,color:#000
+    style IaC fill:#ede9fe,stroke:#7c3aed,color:#000
+    style Scan fill:#ede9fe,stroke:#7c3aed,color:#000
+    style G fill:#ede9fe,stroke:#7c3aed,color:#000
+    style H fill:#fee2e2,stroke:#dc2626,color:#000
+    style I fill:#dcfce7,stroke:#16a34a,color:#000
+    style D2 fill:#e0e6ed,stroke:#6c7a89,color:#000
 ```
 
 > **Devinの位置づけ**：Devinはメインの開発フローと並行して動く自律エージェントです。Slack や GitHub Issue 経由でタスクを受け取り、独立して実装・テスト・PR作成まで行います（詳細は 5.4 参照）。
@@ -405,6 +422,11 @@ graph TD
     Claude <-->|"API設計支援"| apispec
     specs -->|"Markdown変換"| github
     github -->|"OpenAPI Import"| apispec
+
+    style Claude fill:#dbeafe,stroke:#2563eb,color:#000
+    style specs fill:#ede9fe,stroke:#7c3aed,color:#000
+    style apispec fill:#ede9fe,stroke:#7c3aed,color:#000
+    style github fill:#dcfce7,stroke:#16a34a,color:#000
 ```
 
 **要件定義フロー詳細**
@@ -452,6 +474,13 @@ graph TD
     Update --> mock
     Review -->|"合意"| design
     design --> FigmaMCP
+
+    style input fill:#f5f5f5,stroke:#6c757d,color:#000
+    style mock fill:#ede9fe,stroke:#7c3aed,color:#000
+    style Review fill:#ffedd5,stroke:#ea580c,color:#000
+    style loopbox fill:#ffedd5,stroke:#ea580c,color:#000
+    style design fill:#ede9fe,stroke:#7c3aed,color:#000
+    style FigmaMCP fill:#dcfce7,stroke:#16a34a,color:#000
 ```
 
 **デザインフロー詳細**
@@ -494,6 +523,11 @@ graph TD
     arch --> detail
     detail --> tasks
     CC <-->|"チケット自動生成・更新"| Jira
+
+    style input fill:#f5f5f5,stroke:#6c757d,color:#000
+    style arch fill:#dbeafe,stroke:#2563eb,color:#000
+    style detail fill:#dbeafe,stroke:#2563eb,color:#000
+    style tasks fill:#ede9fe,stroke:#7c3aed,color:#000
 ```
 
 **設計・タスク分割フロー詳細**
@@ -549,6 +583,15 @@ graph TD
     ide -->|"差分レビュー・微修正・PR作成"| PR
     tasks -->|"タスク取得"| saas_agent
     saas_agent -->|"自律実装・自動PR作成"| PR
+
+    style github fill:#f5f5f5,stroke:#6c757d,color:#000
+    style figma_ui fill:#ede9fe,stroke:#7c3aed,color:#000
+    style cli fill:#dbeafe,stroke:#2563eb,color:#000
+    style ide fill:#dbeafe,stroke:#2563eb,color:#000
+    style saas_agent fill:#dbeafe,stroke:#2563eb,color:#000
+    style database fill:#ede9fe,stroke:#7c3aed,color:#000
+    style tasks fill:#ede9fe,stroke:#7c3aed,color:#000
+    style PR fill:#dcfce7,stroke:#16a34a,color:#000
 ```
 
 **実装フロー詳細**
@@ -588,6 +631,12 @@ graph TD
     ClaudeRev --> Human
     Human -->|"承認"| Approved
     Human -->|"修正依頼"| impl
+
+    style PR fill:#f5f5f5,stroke:#6c757d,color:#000
+    style impl fill:#dbeafe,stroke:#2563eb,color:#000
+    style review fill:#dbeafe,stroke:#2563eb,color:#000
+    style Human fill:#ffedd5,stroke:#ea580c,color:#000
+    style Approved fill:#dcfce7,stroke:#16a34a,color:#000
 ```
 
 **レビューフロー詳細**
@@ -633,6 +682,13 @@ graph TD
 
     e2e_test -->|"全テスト通過"| Pass
     e2e_test -->|"テスト失敗"| FixImpl
+
+    style Approved fill:#f5f5f5,stroke:#6c757d,color:#000
+    style unit_test fill:#dbeafe,stroke:#2563eb,color:#000
+    style integration_test fill:#ede9fe,stroke:#7c3aed,color:#000
+    style e2e_test fill:#ede9fe,stroke:#7c3aed,color:#000
+    style Pass fill:#dcfce7,stroke:#16a34a,color:#000
+    style FixImpl fill:#fee2e2,stroke:#dc2626,color:#000
 ```
 
 **テストフロー詳細**
@@ -695,6 +751,12 @@ graph TD
     Container --> Deploy
     Deploy -->|"成功"| Prod
     Deploy -->|"失敗"| Rollback
+
+    style TestPass fill:#f5f5f5,stroke:#6c757d,color:#000
+    style cicd fill:#dbeafe,stroke:#2563eb,color:#000
+    style infra fill:#ede9fe,stroke:#7c3aed,color:#000
+    style Prod fill:#dcfce7,stroke:#16a34a,color:#000
+    style Rollback fill:#fee2e2,stroke:#dc2626,color:#000
 ```
 
 **CI/CDパイプラインフロー詳細**
@@ -740,9 +802,15 @@ graph TD
     Triage -->|"修正が必要"| Fix
     Fix -->|"修正PR"| CICDReturn
     Triage & Fix --> PostMortem
+
+    style Prod fill:#f5f5f5,stroke:#6c757d,color:#000
+    style monitoring fill:#ede9fe,stroke:#7c3aed,color:#000
+    style incident fill:#dbeafe,stroke:#2563eb,color:#000
+    style CICDReturn fill:#dcfce7,stroke:#16a34a,color:#000
+    style Alert fill:#fee2e2,stroke:#dc2626,color:#000
 ```
 
-**インシデント対応フロー詳細**
+**��ンシデント対応フロー詳細**
 
 | フェーズ | 担当 | アクション |
 |---|---|---|
@@ -825,6 +893,12 @@ graph TD
     ide -->|"コミット時スキャン"| security
     security -->|"違反あり"| Block
     security -->|"問題なし"| Pass
+
+    style ide fill:#dbeafe,stroke:#2563eb,color:#000
+    style cli fill:#dbeafe,stroke:#2563eb,color:#000
+    style security fill:#ede9fe,stroke:#7c3aed,color:#000
+    style Block fill:#fee2e2,stroke:#dc2626,color:#000
+    style Pass fill:#dcfce7,stroke:#16a34a,color:#000
 ```
 
 **セキュリティスキャン詳細**
@@ -866,6 +940,11 @@ graph TD
     
     MD -.->|"次スプリントの<br/>要件定義・実装へ"| ClaudeCode
     Figma -.->|"次スプリントの<br/>デザイン改修へ"| ClaudeCode
+
+    style Prod fill:#dcfce7,stroke:#16a34a,color:#000
+    style analytics fill:#ede9fe,stroke:#7c3aed,color:#000
+    style agent fill:#dbeafe,stroke:#2563eb,color:#000
+    style feedback fill:#f5f5f5,stroke:#6c757d,color:#000
 ```
 
 **UX解析フロー詳細**
@@ -1171,6 +1250,13 @@ flowchart LR
     D --> E["SPEC.md 更新"]
     E --> A
     C -->|"合意"| F["SPEC.md 確定<br/>→ 基本設計へ"]
+
+    style A fill:#dbeafe,stroke:#2563eb,color:#000
+    style B fill:#ede9fe,stroke:#7c3aed,color:#000
+    style C fill:#ffedd5,stroke:#ea580c,color:#000
+    style D fill:#ffedd5,stroke:#ea580c,color:#000
+    style E fill:#f5f5f5,stroke:#6c757d,color:#000
+    style F fill:#dcfce7,stroke:#16a34a,color:#000
 ```
 
 > **ポイント**：モックの目的は「完成品を作ること」ではなく「認識ズレを早期に発見すること」。作り込みすぎず、1〜2回のレビューで SPEC.md が確定するのが理想。
@@ -1230,6 +1316,12 @@ flowchart LR
     B --> C["詳細設計<br/>DETAIL_DESIGN.md"]
     C --> E["AI環境設定<br/>CLAUDE.md + .claude/"]
     E --> D["実装"]
+
+    style A fill:#f5f5f5,stroke:#6c757d,color:#000
+    style B fill:#f5f5f5,stroke:#6c757d,color:#000
+    style C fill:#f5f5f5,stroke:#6c757d,color:#000
+    style E fill:#f5f5f5,stroke:#6c757d,color:#000
+    style D fill:#dbeafe,stroke:#2563eb,color:#000
 ```
 
 #### 基本設計の成果物一覧
@@ -1847,12 +1939,12 @@ flowchart LR
     D --> E["5.5 Figma MCP → 実装"]
     E --> F["5.6 デザイントークン管理"]
     
-    style A fill:#8b5cf6,stroke:#7c3aed,color:#fff
-    style B fill:#f59e0b,stroke:#d97706,color:#fff
-    style C fill:#ec4899,stroke:#db2777,color:#fff
-    style D fill:#ef4444,stroke:#dc2626,color:#fff
-    style E fill:#3b82f6,stroke:#2563eb,color:#fff
-    style F fill:#22c55e,stroke:#16a34a,color:#fff
+    style A fill:#dbeafe,stroke:#2563eb,color:#000
+    style B fill:#dbeafe,stroke:#2563eb,color:#000
+    style C fill:#dbeafe,stroke:#2563eb,color:#000
+    style D fill:#ede9fe,stroke:#7c3aed,color:#000
+    style E fill:#ede9fe,stroke:#7c3aed,color:#000
+    style F fill:#f5f5f5,stroke:#6c757d,color:#000
 ```
 
 ### 5.1 AIによるUIラフ案の生成（仕様 → デザイン）
@@ -2045,7 +2137,10 @@ flowchart TD
     B -->|変換| C["CSS Variables /<br/>Tailwind Config /<br/>JS Constants"]
     C -->|参照| D["コンポーネント実装"]
     
-    style A fill:#a855f7,stroke:#7c3aed,color:#fff
+    style A fill:#ede9fe,stroke:#7c3aed,color:#000
+    style B fill:#f5f5f5,stroke:#6c757d,color:#000
+    style C fill:#f5f5f5,stroke:#6c757d,color:#000
+    style D fill:#dbeafe,stroke:#2563eb,color:#000
 ```
 
 コードとデザインの乖離を防ぐため、デザイントークンをGitで管理し、Figmaの変更を自動的にコードに反映するCI/CDパイプラインを構築することを推奨。
@@ -2353,9 +2448,9 @@ flowchart LR
     B --> C["3. リファクタリング"]
     C -->|繰り返し| A
     
-    style A fill:#ef4444,stroke:#dc2626,color:#fff
-    style B fill:#22c55e,stroke:#16a34a,color:#fff
-    style C fill:#3b82f6,stroke:#2563eb,color:#fff
+    style A fill:#dbeafe,stroke:#2563eb,color:#000
+    style B fill:#dbeafe,stroke:#2563eb,color:#000
+    style C fill:#dbeafe,stroke:#2563eb,color:#000
 ```
 
 **プロンプト例**
@@ -2684,9 +2779,9 @@ graph TD
     E2E --- Integ
     Integ --- Unit
 
-    style E2E fill:#ef4444,stroke:#dc2626,color:#fff
-    style Integ fill:#f59e0b,stroke:#d97706,color:#fff
-    style Unit fill:#22c55e,stroke:#16a34a,color:#fff
+    style E2E fill:#ede9fe,stroke:#7c3aed,color:#000
+    style Integ fill:#dbeafe,stroke:#2563eb,color:#000
+    style Unit fill:#dbeafe,stroke:#2563eb,color:#000
 ```
 
 > ピラミッドの下層ほどAI生成の比率を高めるのが基本戦略。上層（E2E）は数を絞り、重要な業務フローのみをカバーする。
@@ -2790,6 +2885,13 @@ flowchart LR
     Diff -->|差分あり| Fix["Claude Code<br/>自動修正"]
     Fix --> PW
     Diff -->|許容範囲| Done["PR 作成"]
+
+    style Figma fill:#ede9fe,stroke:#7c3aed,color:#000
+    style Gen fill:#dbeafe,stroke:#2563eb,color:#000
+    style PW fill:#ede9fe,stroke:#7c3aed,color:#000
+    style Diff fill:#dbeafe,stroke:#2563eb,color:#000
+    style Fix fill:#dbeafe,stroke:#2563eb,color:#000
+    style Done fill:#dcfce7,stroke:#16a34a,color:#000
 ```
 
 **典型プロンプト：**
@@ -2836,6 +2938,14 @@ flowchart LR
     Auto --> Verify["検証"]
     Verify -->|"成功"| Deploy
     Verify -->|"失敗"| Alert
+
+    style Deploy fill:#dcfce7,stroke:#16a34a,color:#000
+    style Monitor fill:#dbeafe,stroke:#2563eb,color:#000
+    style OK fill:#dcfce7,stroke:#16a34a,color:#000
+    style Analyze fill:#dbeafe,stroke:#2563eb,color:#000
+    style Auto fill:#dbeafe,stroke:#2563eb,color:#000
+    style Alert fill:#fee2e2,stroke:#dc2626,color:#000
+    style Verify fill:#dbeafe,stroke:#2563eb,color:#000
 ```
 
 ### 9.3 インシデント対応の自動化
@@ -2901,6 +3011,14 @@ flowchart LR
     VDB --> Search
     Search --> LLM2["LLM<br/>検索結果 + 質問で<br/>回答生成"]
     LLM2 --> Ans["回答<br/>出典付き"]
+
+    style Docs fill:#f5f5f5,stroke:#6c757d,color:#000
+    style Embed fill:#dbeafe,stroke:#2563eb,color:#000
+    style VDB fill:#ede9fe,stroke:#7c3aed,color:#000
+    style User fill:#ffedd5,stroke:#ea580c,color:#000
+    style Search fill:#dbeafe,stroke:#2563eb,color:#000
+    style LLM2 fill:#dbeafe,stroke:#2563eb,color:#000
+    style Ans fill:#dcfce7,stroke:#16a34a,color:#000
 ```
 
 #### 9.6.3 AI開発での実装方法
@@ -3091,6 +3209,15 @@ flowchart TD
     Q2 -->|"いいえ（CLI で十分）"| A2["k8sgpt CLI"]
     Q3 -->|"Google Cloud"| A3["kubectl-ai（Google）"]
     Q3 -->|"その他"| A4["kubectl-ai（sozercan）"]
+
+    style Start fill:#ffedd5,stroke:#ea580c,color:#000
+    style Q1 fill:#f5f5f5,stroke:#6c757d,color:#000
+    style Q2 fill:#f5f5f5,stroke:#6c757d,color:#000
+    style Q3 fill:#f5f5f5,stroke:#6c757d,color:#000
+    style A1 fill:#ede9fe,stroke:#7c3aed,color:#000
+    style A2 fill:#ede9fe,stroke:#7c3aed,color:#000
+    style A3 fill:#ede9fe,stroke:#7c3aed,color:#000
+    style A4 fill:#ede9fe,stroke:#7c3aed,color:#000
 ```
 
 #### k8sgpt の基本的な使い方
@@ -3156,6 +3283,15 @@ flowchart LR
     Scan -->|"パス"| Plan["terraform plan<br/>（差分確認）"]
     Plan --> Review["人間レビュー<br/>（承認）"]
     Review --> Apply["terraform apply"]
+
+    style Dev fill:#ffedd5,stroke:#ea580c,color:#000
+    style AI fill:#dbeafe,stroke:#2563eb,color:#000
+    style Gen fill:#f5f5f5,stroke:#6c757d,color:#000
+    style Scan fill:#ede9fe,stroke:#7c3aed,color:#000
+    style Fix fill:#dbeafe,stroke:#2563eb,color:#000
+    style Plan fill:#ede9fe,stroke:#7c3aed,color:#000
+    style Review fill:#ffedd5,stroke:#ea580c,color:#000
+    style Apply fill:#dcfce7,stroke:#16a34a,color:#000
 ```
 
 #### プロンプト例：Claude Code + Terraform MCP
@@ -3504,6 +3640,11 @@ flowchart LR
 
     GW --> gw_func
     gw_func --> backends
+
+    style App fill:#ede9fe,stroke:#7c3aed,color:#000
+    style GW fill:#d4edda,stroke:#28a745,color:#000
+    style gw_func fill:#d4edda,stroke:#28a745,color:#000
+    style backends fill:#dbeafe,stroke:#2563eb,color:#000
 ```
 
 #### 主要機能
@@ -3757,6 +3898,13 @@ flowchart TB
     Cod["Codex CLI"] --> Mem
     Mem --> Cod
     Mem --> Log["決定ログ / 調査結果 /<br/>タスク状態"]
+
+    style CC fill:#dbeafe,stroke:#2563eb,color:#000
+    style Cur fill:#dbeafe,stroke:#2563eb,color:#000
+    style Dev fill:#e0e6ed,stroke:#6c7a89,color:#000
+    style Cod fill:#dbeafe,stroke:#2563eb,color:#000
+    style Mem fill:#ede9fe,stroke:#7c3aed,color:#000
+    style Log fill:#f5f5f5,stroke:#6c757d,color:#000
 ```
 
 | 用途               | 保存内容                                       |
