@@ -155,6 +155,8 @@ flowchart LR
 | **Notion MCP** | ドキュメント | Notion（公式） | Notionページ・データベースの参照・作成・更新。社内ナレッジの検索 | 社内仕様書・議事録の参照、プライベートドキュメントのRAG的活用（Context7の対象外領域を補完） | 8.6 |
 | **Datadog MCP** | 監視・運用 | Datadog | メトリクス・ログ・トレースの取得、アラート情報の参照 | インシデント発生時の根本原因自動解析（RCA）、SLO違反・レイテンシ異常の調査 | 8.7 |
 | **Slack MCP** | コミュニケーション | Slack | チャンネル・スレッドの検索、メッセージ投稿、過去の議論コンテキスト取得 | ChatOpsによるインシデント対応、アラート通知・承認フロー、過去の類似障害対応履歴の検索 | 8.8 |
+| **Docker MCP** | コンテナ | Docker | Docker Desktop MCP Toolkit 経由で300以上の検証済み MCP サーバーをコンテナとして安全に実行。Gordon AI による Dockerfile・Compose 生成 | コンテナ化された MCP サーバーの一元管理、Dockerfile / Compose 最適化 | 9.9 |
+| **Terraform MCP** | IaC | HashiCorp | Terraform Registry の最新ドキュメント・モジュール・プロバイダー情報を AI に提供 | IaC コード生成時の正確なリソース定義、モジュール選定 | 9.11 |
 
 > **ポイント**：MCP は登録しすぎるとツール説明だけでコンテキストを消費し、AI の精度が低下する。プロジェクトに本当に必要なものだけを選定し、不要な MCP は定期的に棚卸しすること（詳細は 9.4 参照）。
 
@@ -368,7 +370,7 @@ flowchart TD
 | 6. 実装          | 実装PR                                                           | テスト成功 + 仕様準拠（Apidog MCP 導入時は API仕様差分が解消済み）       | 1セッションに複数課題を混在                               |
 | 7. コードレビュー | レビュー記録                                                    | Copilot + Claude Code + 人間承認                                         | AIレビューのみでマージ                                    |
 | 8. テスト        | テスト結果 + 視覚差分レポート                                    | 自動テスト全件通過 + UI 視覚差分が許容範囲内                             | E2Eテストの未整備                                         |
-| 9. CI/CD・運用   | デプロイ完了 + インシデント対応記録                              | デプロイ成功 + ロールバック手順確認 + アラート設定                       | 自動化だけ導入し監視未整備                                |
+| 9. CI/CD・運用   | デプロイ完了 + インシデント対応記録                              | デプロイ成功 + ロールバック手順確認 + アラート設定 + IaC静的解析パス    | 自動化だけ導入し監視未整備                                |
 
 > **※1**：`BASIC_DESIGN.md` はシステム構成図・ER図・API仕様書・画面遷移図・非機能要件をMermaid/表で内包する。
 > **※2**：`DETAIL_DESIGN.md` はクラス図・シーケンス図・コンポーネント設計を内包する。
@@ -2925,6 +2927,182 @@ sequenceDiagram
 ```
 
 このアプローチでは、AIが自律的に裏で調査からパッチ作成までを行う一方で、最終的な意思決定（デプロイ承認など）は人間がSlack上の見慣れたUI（スレッドの返信やボタン）で行うという理想的な「Human-in-the-Loop」を実現できます。
+
+### 9.9 コンテナ・Docker × AI（Docker Desktop MCP / Gordon）
+
+Docker Desktop 4.42 以降、MCP Toolkit がネイティブ統合され、300以上の検証済み MCP サーバーをコンテナとして安全に実行できるようになった。AI エージェントによるコンテナ環境の直接操作・管理が実用段階に入っている。
+
+#### 主要機能
+
+| 機能 | 概要 | 対応バージョン |
+|---|---|---|
+| **MCP Catalog** | 300以上の検証済み MCP サーバーをワンクリックで追加。GitHub / MongoDB / Grafana / Neo4j 等のコネクタを提供 | Docker Desktop 4.40+ |
+| **MCP Toolkit** | MCP サーバーのライフサイクル管理（起動・停止・シークレット管理）。コンテナ分離によるセキュリティ確保 | Docker Desktop 4.42+（ネイティブ統合） |
+| **Gordon AI Agent** | Docker Desktop 組み込みの AI エージェント。Dockerfile 生成・docker-compose.yml 最適化・コンテナデバッグに対応 | Docker Desktop 4.39+（GA） |
+| **Dynamic MCP** | AI エージェントが会話中に必要な MCP サーバーを自動検出・オンデマンド追加する機能 | Docker Desktop 4.42+ |
+| **`docker mcp` CLI** | ターミナルから MCP サーバーの起動・設定・シークレット管理を実行 | Docker Desktop 4.42+ |
+
+#### ワークフロー：AI × Docker MCP 連携
+
+```mermaid
+flowchart LR
+    AI["AIアシスタント<br/>Claude Code / Cursor"] -->|MCP| Toolkit["Docker MCP Toolkit<br/>（ゲートウェイ）"]
+    Toolkit --> C1["GitHub MCP<br/>（コンテナ）"]
+    Toolkit --> C2["Postgres MCP<br/>（コンテナ）"]
+    Toolkit --> C3["Grafana MCP<br/>（コンテナ）"]
+    Toolkit --> C4["カスタム MCP<br/>（コンテナ）"]
+```
+
+#### 対応 AI クライアント
+
+Claude Desktop / Cursor / VS Code（GitHub Copilot Agent Mode）/ Windsurf / Continue.dev / Goose など主要な AI 開発ツールと連携可能。
+
+#### プロンプト例
+
+Gordon AI に対して、Dockerfile のマルチステージビルド構成を生成させる例：
+
+```text
+このNode.jsアプリケーション用に、マルチステージビルドの Dockerfile を作成してください。
+- ビルドステージ: npm ci でビルド
+- 実行ステージ: distroless イメージベース
+- ヘルスチェック付き
+```
+
+既存の docker-compose.yml をAIに分析・最適化させる例：
+
+```text
+現在の docker-compose.yml を分析して、以下を改善してください：
+- リソース制限（CPU/メモリ）の追加
+- ヘルスチェックの設定
+- ネットワーク分離の強化
+```
+
+#### エンタープライズ管理
+
+Docker Business / Docker Desktop Enterprise では、RAM（Registry Access Management）と IAM（Image Access Management）を使って、チームが利用可能な MCP サーバーを管理者が一元制御できる。未承認の MCP サーバーの利用を防止し、セキュリティポリシーを統一する。
+
+> **ポイント**：Docker MCP Toolkit の最大の利点は「コンテナ分離」。MCP サーバーがホスト環境を汚染せず、シークレット管理も Docker の仕組みに統合されるため、セキュリティリスクを最小化できる。まずは既存の MCP サーバーを Docker 経由に移行することから始めるとよい。
+
+### 9.10 Kubernetes × AI（k8sgpt / kubectl-ai）
+
+Kubernetes クラスタの運用は複雑さが増す一方であり、AI による診断・自動修復・マニフェスト生成が実用段階に入っている。CNCF Sandbox プロジェクトの k8sgpt を筆頭に、自然言語でクラスタを操作するツールが急速に成熟している。
+
+#### ツール比較
+
+| ツール | 提供元 | 主な機能 | 対応LLM | 特徴 |
+|---|---|---|---|---|
+| **k8sgpt** | CNCF Sandbox（2023年12月採択） | クラスタ診断・根本原因分析・修復提案 | OpenAI / Azure / Bedrock / Ollama / Claude | Trivy・Kyverno・Prometheus と統合。Operator で常駐監視も可能 |
+| **kubectl-ai**（Google Cloud版） | Google Cloud Platform | 自然言語から kubectl コマンド・マニフェスト生成 | Gemini | Google Cloud 環境との親和性が高い |
+| **kubectl-ai**（OSS / sozercan版） | コミュニティ | 自然言語からマニフェスト生成。カスタムリソース対応 | OpenAI GPT | cert-manager / ArgoCD 等のカスタムリソースも生成可能 |
+| **HolmesGPT** | Robusta | インシデント調査・根本原因分析 | 複数対応 | Robusta のアラートエンジンと統合 |
+
+#### ユースケース別選定ガイド
+
+```mermaid
+flowchart TD
+    Start["Kubernetes × AI を導入したい"] --> Q1{"主な目的は？"}
+    Q1 -->|"クラスタ診断・障害対応"| Q2{"常駐監視が必要？"}
+    Q1 -->|"マニフェスト生成"| Q3{"利用クラウドは？"}
+    Q2 -->|"はい"| A1["k8sgpt-operator"]
+    Q2 -->|"いいえ（CLI で十分）"| A2["k8sgpt CLI"]
+    Q3 -->|"Google Cloud"| A3["kubectl-ai（Google）"]
+    Q3 -->|"その他"| A4["kubectl-ai（sozercan）"]
+```
+
+#### k8sgpt の基本的な使い方
+
+```bash
+# インストール
+brew install k8sgpt
+
+# クラスタ全体の診断
+k8sgpt analyze
+
+# AIによる根本原因分析と修復提案（OpenAI利用時）
+k8sgpt analyze --explain --backend openai
+
+# Claude をバックエンドに使う場合（要 Anthropic API キー設定）
+k8sgpt analyze --explain --backend anthropic
+
+# 特定のリソースタイプに絞って診断
+k8sgpt analyze --explain --filter=Pod,Service,Ingress
+
+# 統合フィルタの有効化（Trivy による脆弱性スキャン）
+k8sgpt filters add trivy
+k8sgpt analyze --explain --filter=VulnerabilityReport
+```
+
+#### プロンプト例：kubectl-ai でのマニフェスト生成
+
+```text
+# 自然言語でDeployment + Service を生成
+kubectl-ai "Nginxを3レプリカでデプロイし、ClusterIPサービスを作成。
+リソース制限はCPU 200m / メモリ 256Miに設定。
+liveness/readinessプローブも追加して"
+```
+
+> **ポイント**：
+> - k8sgpt は MTTR（平均修復時間）を50〜70%程度削減する効果が報告されている（目安）
+> - まずは `k8sgpt analyze --explain` をCI/CDに組み込むことから始める
+> - 慣れたら Operator での常駐監視に移行し、継続的なヘルスチェックを自動化する
+> - MCP 経由での直接連携は発展中であり、現状は CLI ツールとして活用する形が主流
+
+### 9.11 IaC × AI（Terraform MCP / Pulumi Neo）
+
+Infrastructure as Code（IaC）の領域でも AI 活用が進んでおり、Terraform MCP Server による正確なリソース定義の参照や、Pulumi Neo による自然言語からの IaC 生成が実用化されている。ただし、AI 生成の IaC は設定ミスのリスクが伴うため、静的解析との組み合わせが必須となる。
+
+#### ツール比較
+
+| ツール | 提供元 | 主な機能 | 特徴 |
+|---|---|---|---|
+| **Terraform MCP Server** | HashiCorp（公式） | Terraform Registry の最新ドキュメント・モジュール・プロバイダー情報を AI に提供 | Claude Code / Cursor / VS Code と連携。早期開発段階 |
+| **Pulumi Neo** | Pulumi | 自然言語でインフラ要件を記述すると自律的に IaC を生成・PR 作成まで実行 | TypeScript / Python / Go / C# / YAML 対応。2026年時点でプラットフォームへの統合が進行中（一部プレビュー提供） |
+| **Checkov** | Prisma Cloud（Palo Alto） | Terraform / OpenTofu プランのセキュリティ静的解析。自然言語でカスタムルール定義可能 | 1000以上の組み込みポリシー。CI/CD 統合が容易 |
+| **Firefly MCP** | Firefly | Cursor / Claude から自然言語でリソースをコード化・ドリフト修正 | マルチクラウド対応の SaaS 製品 |
+
+#### 安全な IaC × AI ワークフロー
+
+```mermaid
+flowchart LR
+    Dev["開発者<br/>自然言語で要件記述"] --> AI["AI（Claude Code）<br/>+ Terraform MCP"]
+    AI --> Gen["IaC コード生成<br/>（.tf ファイル）"]
+    Gen --> Scan["静的解析<br/>Checkov / tfsec"]
+    Scan -->|"違反あり"| Fix["AI が自動修正"]
+    Fix --> Scan
+    Scan -->|"パス"| Plan["terraform plan<br/>（差分確認）"]
+    Plan --> Review["人間レビュー<br/>（承認）"]
+    Review --> Apply["terraform apply"]
+```
+
+#### プロンプト例：Claude Code + Terraform MCP
+
+```text
+# Terraform MCP を使った安全なインフラ構築
+Terraform MCP Server を参照して、以下の AWS インフラを構築する .tf ファイルを作成してください：
+
+1. VPC（10.0.0.0/16）+ パブリック/プライベートサブネット
+2. ALB + ターゲットグループ
+3. ECS Fargate サービス（2タスク）
+4. RDS PostgreSQL（Multi-AZ）
+
+要件：
+- 最新のプロバイダーバージョンを使用
+- セキュリティグループは最小権限の原則に従う
+- タグ付けは company=example, env=production で統一
+- Checkov のスキャンに通るセキュリティ設定にすること
+```
+
+#### IaC × AI の注意点
+
+| リスク | 対策 |
+|---|---|
+| AI が古いリソース定義を生成する | Terraform MCP Server で最新の Registry 情報を参照させる |
+| セキュリティ設定ミス（ポートの全開放等） | Checkov / tfsec をCI/CDに必須ステップとして組み込む |
+| `terraform apply` の意図しない破壊的変更 | 必ず `terraform plan` の差分を人間がレビュー。自動 apply は禁止 |
+| ステートファイルの競合 | リモートバックエンド（S3 + DynamoDB ロック等）を必須とする |
+| AI 生成コードの保守性低下 | モジュール化を徹底し、AI 生成コードもコードレビューを通す |
+
+> **ポイント**：AI 生成の IaC は生産性を大幅に向上させるが、「生成→即 apply」は危険。**必ず「AI 生成 → 静的解析 → plan → 人間レビュー → apply」のフローを守ること**。ある大規模組織では IaC の30%程度が AI 生成になった一方、静的解析なしでは設定ミスが増加したとの報告もある（目安）。
 
 ---
 
