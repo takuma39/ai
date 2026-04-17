@@ -759,33 +759,33 @@ graph TD
 
 ```mermaid
 graph TD
-    subgraph ide["IDEレイヤー"]
-        Cursor["Cursor / VS Code + Copilot / Antigravity"]
+    subgraph protected["ゲートウェイ経由（保護対象）"]
+        cli["CLIレイヤー<br/>Claude Code"]
+        Claude["Claude / AI"]
+        Prod["本番環境 / アプリ"]
     end
-
-    subgraph cli["CLIレイヤー"]
-        CC["Claude Code"]
-    end
-
-    Claude["Claude / AI"]
-    Prod["本番環境 / アプリ"]
 
     subgraph gateway["AIゲートウェイ"]
-        GWProxy["AWS Bedrock Guardrails"]
+        GWProxy["AWS Bedrock Guardrails<br/>フィルタ・マスキング・ログ・コスト制御"]
     end
 
     LLM["バックエンドLLM<br/>OpenAI / Claude<br/>Bedrock / Azure OpenAI"]
 
-    subgraph saas_agent["クラウド型自律エージェント（ゲートウェイ対象外）"]
-        Devin["Devin"]
+    subgraph unprotected["ゲートウェイ対象外（直接LLM呼び出し）"]
+        ide["IDEレイヤー<br/>Cursor / VS Code + Copilot"]
+        saas_agent["クラウド型自律エージェント<br/>Devin"]
     end
 
     cli -->|"プロンプト送信"| gateway
     Claude -->|"プロンプト送信"| gateway
     Prod -->|"本番プロンプト送信"| gateway
-    gateway -->|"フィルタ・マスキング<br/>ログ・コスト制御"| LLM
-    ide -.->|"直接LLM呼び出し<br/>（SaaS型はゲートウェイ経由不可）"| LLM
-    saas_agent -.->|"直接LLM呼び出し<br/>（ゲートウェイ経由不可）"| LLM
+    gateway --> LLM
+    ide -.->|"直接呼び出し"| LLM
+    saas_agent -.->|"直接呼び出し"| LLM
+
+    style protected fill:#d4edda,stroke:#28a745,color:#000
+    style unprotected fill:#e0e6ed,stroke:#6c7a89,color:#000
+    style gateway fill:#d4edda,stroke:#28a745,color:#000
 ```
 
 > **※AIゲートウェイの適用範囲**：ゲートウェイが保護できるのは「自社アプリ/コードからLLM APIを呼ぶ」経路のみ。GitHub Copilotなどの外部SaaSはそれぞれが直接LLMを呼ぶため、ゲートウェイでは介入できない。詳細は `9.6` を参照。
