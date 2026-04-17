@@ -543,6 +543,7 @@ graph TD
 
     github -->|"仕様熟読・実装"| cli
     figma_ui -->|"デザイントークン・<br/>コンポーネント仕様取得"| cli
+    tasks -->|"タスク取得"| cli
     cli <-->|"スキーマ参照・クエリ"| database
     cli -->|"コード生成・ローカル変更の連携"| ide
     ide -->|"差分レビュー・微修正・PR作成"| PR
