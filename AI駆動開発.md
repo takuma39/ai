@@ -336,7 +336,7 @@ flowchart TD
     B --> B2["3. 詳細設計<br/>(DETAIL_DESIGN.md)"]
     B2 --> B3["4. AI環境設定<br/>(CLAUDE.md + .claude/)"]
     B3 --> TS["タスク分割<br/>(Claude Code + Jira / GitHub MCP)"]
-    TS --> C["5. UI/UXデザイン<br/>(Figma + デザインシステム)"]
+    TS --> C["5. UI/UXデザイン<br/>(Figma AI)"]
     C --> D["6. 実装<br/>(Claude Code主体 / IDEは微修正・レビュー)"]
     D --> T["8. テスト作成・実行<br/>(Playwright / Vitest)"]
     T -->|"失敗"| D
@@ -434,8 +434,8 @@ graph TD
         Update["SPEC.md 更新"]
     end
 
-    subgraph design["本格デザイン（4章）"]
-        Figma["Figma<br/>（デザインシステム適用）"]
+    subgraph design["本格デザイン（5章）"]
+        Figma["Figma AI<br/>（Figma Make・画像編集等）"]
     end
 
     FigmaMCP["Figma MCP → 実装フェーズへ"]
@@ -456,7 +456,7 @@ graph TD
 | モック生成 | Figma AI / v0.dev / Google Stitch | 仮SPEC.mdからモックを複数パターン生成 |
 | ステークホルダーレビュー | PM・デザイナー・エンジニア | モックを見ながら認識ズレを発見・フィードバック |
 | SPEC.md 更新 | Claude Code | フィードバックを仕様書に反映し反復（詳細は 1.9 参照） |
-| 本格デザイン | デザイナー + Figma AI | ブランドガイドライン・デザインシステムを適用して完成度を上げる |
+| 本格デザイン | デザイナー + Figma AI（Figma Make等） | ブランドガイドライン適用・インタラクティブプロトタイプ生成で完成度を上げる |
 | Figma MCP 連携 | Claude Code + Figma MCP | デザイントークン・コンポーネント仕様を取得し実装フェーズへ引き渡す |
 
 ---
@@ -1778,7 +1778,7 @@ flowchart LR
 | ツール | 特徴 | 推奨用途 |
 |--------|------|----------|
 | **Claude Code + スクリーンショット** | HTMLを生成→ブラウザで表示→スクショ撮影→AIが自己評価 | エンジニア主導のプロトタイピング |
-| **Figma AI (Make Designs)** | Figma内蔵のAIでフレーム・コンポーネントを自動生成 | デザイナー主導のラフ案作成 |
+| **Figma AI (Make Designs / Figma Make)** | Make Designsでフレーム・コンポーネント自動生成。Figma Makeでプロンプトからインタラクティブプロトタイプを生成。画像編集AI（Erase/Isolate/Expand）も搭載 | デザイナー主導のラフ案〜本格デザイン |
 | **Google Stitch** | テキスト・スケッチからGoogle Material Designに準拠した高精度UIを生成 | PM・デザイナー主導。Material Designベースのプロダクト |
 
 #### ワークフロー：仕様書 → AIラフ案 → デザイナーの洗練
