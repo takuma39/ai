@@ -345,7 +345,10 @@ flowchart TD
     T -->|"成功"| E["7. コードレビュー<br/>(Copilot + Claude Code + 人間)"]
     E -->|修正| D
     E -->|承認| F["9. CI/CD<br/>(GitHub Actions)"]
-    F -->|デプロイ| G["本番運用・監視<br/>(Datadog)"]
+    F --> IaC["IaC・コンテナ管理<br/>(Terraform MCP / Docker MCP)"]
+    IaC --> Scan["静的解析・スキャン<br/>(Checkov / k8sgpt)"]
+    Scan -->|"パス"| G["本番運用・監視<br/>(Datadog)"]
+    Scan -->|"違反"| D
     G -->|"アラート (Slack)"| H{"インシデント?"}
     H -->|"AI調査・修正"| D
     H -->|"正常"| I["リリース完了"]
@@ -649,15 +652,22 @@ graph TD
     subgraph cicd["CI/CD（GitHub Actions）"]
         Build["ビルド・Lint・型チェック"]
         AutoTest["自動テスト実行<br/>（Unit / Integration / E2E）"]
+        InfraScan["IaC静的解析・コンテナスキャン<br/>（Checkov / k8sgpt / Trivy）"]
         Deploy["デプロイ<br/>（Staging → Production）"]
         Rollback["⚠️ ロールバック実行"]
     end
 
     Prod["🌐 本番環境 / アプリ"]
 
+    subgraph infra["インフラ管理（MCP連携）"]
+        IaC["IaCコード管理<br/>（Terraform MCP / Pulumi）"]
+        Container["コンテナ管理<br/>（Docker MCP / Gordon）"]
+    end
+
     subgraph monitoring["監視（Datadog MCP連携）"]
         Metrics["メトリクス監視<br/>CPU・メモリ・レイテンシ"]
         Logs["ログ集約・エラー検知"]
+        K8sDiag["k8sgpt 常駐診断<br/>（Operator）"]
         Alert["🚨 アラート発火"]
     end
 
@@ -672,13 +682,17 @@ graph TD
 
     Approved --> Build
     Build -->|"成功"| AutoTest
-    AutoTest -->|"成功"| Deploy
+    AutoTest -->|"成功"| InfraScan
+    InfraScan -->|"パス"| Deploy
+    InfraScan -->|"違反"| Fix
     AutoTest -->|"失敗"| Rollback
     Deploy -->|"失敗"| Rollback
+    IaC --> InfraScan
+    Container --> Deploy
     Deploy --> Prod
 
-    Prod --> Metrics & Logs
-    Metrics & Logs --> Alert
+    Prod --> Metrics & Logs & K8sDiag
+    Metrics & Logs & K8sDiag --> Alert
 
     Alert --> SlackAlert
     SlackAlert --> Triage
@@ -692,9 +706,9 @@ graph TD
 
 | フェーズ | 担当 | アクション |
 |---|---|---|
-| 検知 | Datadog | SLO違反・レイテンシ異常・エラーレート急増を検知 |
+| 検知 | Datadog / k8sgpt | SLO違反・レイテンシ異常・エラーレート急増を検知。k8sgpt Operator がクラスタ異常を常駐診断 |
 | 通知 | Slack MCP | アラート内容・影響範囲・発生時刻を自動投稿 |
-| トリアージ | Claude Code + Datadog MCP | ログ・トレースを取得し根本原因（RCA）を解析 |
+| トリアージ | Claude Code + Datadog MCP | ログ・トレースを取得し根本原因（RCA）を解析。k8s環境ではk8sgptの診断結果も参照 |
 | 修正 | Claude Code / Devin | 修正コード生成・PR作成・レビュー依頼 |
 | ロールバック | GitHub Actions | 修正が間に合わない場合は自動ロールバック発動 |
 | レポート | Claude Code + Slack MCP | インシデントレポート（事象・原因・対策・再発防止策）を自動生成 |
