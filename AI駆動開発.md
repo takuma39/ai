@@ -519,11 +519,11 @@ graph TD
         Figma["Figma + Figma MCP"]
     end
 
-    subgraph cli["CLIレイヤー（自律的ビルド・テスト・一括処理）"]
+    subgraph cli["CLIレイヤー"]
         CC["Claude Code"]
     end
 
-    subgraph ide["IDEレイヤー（差分レビュー・微修正）"]
+    subgraph ide["IDEレイヤー"]
         Cursor["Cursor / VS Code + Copilot / Antigravity"]
     end
 
@@ -541,15 +541,13 @@ graph TD
 
     PR["Pull Request"]
 
-    github -->|"仕様読み込み"| figma_ui
-    figma_ui <-->|"Figma MCP"| cli
     github -->|"仕様熟読・実装"| cli
-    github -->|"リポジトリ・仕様熟読"| saas_agent
+    figma_ui -->|"デザイントークン・<br/>コンポーネント仕様取得"| cli
     cli <-->|"スキーマ参照・クエリ"| database
     cli -->|"コード生成・ローカル変更の連携"| ide
     ide -->|"差分レビュー・微修正・PR作成"| PR
-    saas_agent -->|"自動PR作成"| PR
-    saas_agent <-->|"自律タスク取得"| tasks
+    tasks -->|"タスク取得"| saas_agent
+    saas_agent -->|"自律実装・自動PR作成"| PR
 ```
 
 **実装フロー詳細**
