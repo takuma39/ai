@@ -45,6 +45,12 @@ flowchart LR
 
     CC["Claude Code"] -->|Read| SkillsDir
     SA["sub-agent"] -->|Read| SkillsDir
+
+    style K fill:#f5f5f5,stroke:#6c757d,color:#000
+    style C fill:#f5f5f5,stroke:#6c757d,color:#000
+    style T fill:#f5f5f5,stroke:#6c757d,color:#000
+    style CC fill:#dbeafe,stroke:#2563eb,color:#000
+    style SA fill:#dbeafe,stroke:#2563eb,color:#000
 ```
 
 | 種別 | 例 | 用途 |
@@ -77,6 +83,11 @@ flowchart TB
 
     CC -->|委譲| Isolated
     Isolated -->|成果物を返す| CC
+
+    style CC fill:#dbeafe,stroke:#2563eb,color:#000
+    style SA1 fill:#dbeafe,stroke:#2563eb,color:#000
+    style SA2 fill:#dbeafe,stroke:#2563eb,color:#000
+    style SA3 fill:#dbeafe,stroke:#2563eb,color:#000
 ```
 
 #### 活用方法
@@ -120,6 +131,15 @@ flowchart LR
     Skills --> SubAgents
 
     SA1 & SA2 & SA3 & SA4 --> Output["📄 成果物"]
+
+    style Human fill:#ffedd5,stroke:#ea580c,color:#000
+    style CC fill:#dbeafe,stroke:#2563eb,color:#000
+    style Skills fill:#f5f5f5,stroke:#6c757d,color:#000
+    style SA1 fill:#dbeafe,stroke:#2563eb,color:#000
+    style SA2 fill:#dbeafe,stroke:#2563eb,color:#000
+    style SA3 fill:#dbeafe,stroke:#2563eb,color:#000
+    style SA4 fill:#dbeafe,stroke:#2563eb,color:#000
+    style Output fill:#f5f5f5,stroke:#6c757d,color:#000
 ```
 
 ---
@@ -138,6 +158,12 @@ flowchart LR
     CC <-->|MCP| Jira["Jira<br/>（チケット）"]
     CC <-->|MCP| Figma["Figma<br/>（デザイン）"]
     CC <-->|MCP| Slack["Slack<br/>（通知・承認）"]
+
+    style CC fill:#dbeafe,stroke:#2563eb,color:#000
+    style GitHub fill:#ede9fe,stroke:#7c3aed,color:#000
+    style Jira fill:#ede9fe,stroke:#7c3aed,color:#000
+    style Figma fill:#ede9fe,stroke:#7c3aed,color:#000
+    style Slack fill:#ede9fe,stroke:#7c3aed,color:#000
 ```
 
 > - MCP 経由の情報は**リアルタイム取得**のため、AI の知識カットオフに縛られない
@@ -184,6 +210,13 @@ flowchart LR
     SK -->|呼び出し規約| SA
     SA <-->|リアルタイム取得| MCP
     SA --> OUT
+
+    style H fill:#ffedd5,stroke:#ea580c,color:#000
+    style CC fill:#dbeafe,stroke:#2563eb,color:#000
+    style SK fill:#f5f5f5,stroke:#6c757d,color:#000
+    style SA fill:#dbeafe,stroke:#2563eb,color:#000
+    style MCP fill:#ede9fe,stroke:#7c3aed,color:#000
+    style OUT fill:#f5f5f5,stroke:#6c757d,color:#000
 ```
 
 Skill に「どの sub-agent を起動し、どの MCP を呼ぶか」を記述することで、エンジニアは短い指示だけで定型フローを再現できる。
@@ -202,6 +235,16 @@ flowchart LR
     FC & DR & SE <--> SR["Serena MCP<br/>symbol 単位で<br/>差分解析"]
     FC & DR & SE <--> GH["GitHub MCP / gh CLI<br/>PR差分・コメント"]
     FC & DR & SE --> OUT["📄 統合レビュー<br/>レポート"]
+
+    style H fill:#ffedd5,stroke:#ea580c,color:#000
+    style CC fill:#dbeafe,stroke:#2563eb,color:#000
+    style SK fill:#f5f5f5,stroke:#6c757d,color:#000
+    style FC fill:#dbeafe,stroke:#2563eb,color:#000
+    style DR fill:#dbeafe,stroke:#2563eb,color:#000
+    style SE fill:#dbeafe,stroke:#2563eb,color:#000
+    style SR fill:#ede9fe,stroke:#7c3aed,color:#000
+    style GH fill:#ede9fe,stroke:#7c3aed,color:#000
+    style OUT fill:#f5f5f5,stroke:#6c757d,color:#000
 ```
 
 - **Skills**：レビュー観点・判定基準・フォーマット
@@ -221,6 +264,15 @@ flowchart LR
     RA & FK <--> C7["Context7 MCP<br/>最新公式ドキュメント"]
     RA & FK <--> WS["WebSearch<br/>補完情報"]
     RA & FK --> OUT["📄 調査レポート<br/>（出典付き）"]
+
+    style H fill:#ffedd5,stroke:#ea580c,color:#000
+    style CC fill:#dbeafe,stroke:#2563eb,color:#000
+    style SK fill:#f5f5f5,stroke:#6c757d,color:#000
+    style RA fill:#dbeafe,stroke:#2563eb,color:#000
+    style FK fill:#dbeafe,stroke:#2563eb,color:#000
+    style C7 fill:#ede9fe,stroke:#7c3aed,color:#000
+    style WS fill:#ede9fe,stroke:#7c3aed,color:#000
+    style OUT fill:#f5f5f5,stroke:#6c757d,color:#000
 ```
 
 - **Skills**：情報源の優先順位、一次/二次ソース判定、引用ルール
@@ -241,6 +293,16 @@ flowchart LR
     TG & TR <--> AP["Apidog MCP<br/>API仕様参照"]
     TG & TR <--> SR["Serena MCP<br/>対象関数取得"]
     TG & TR --> OUT["📄 テストコード +<br/>実行レポート"]
+
+    style H fill:#ffedd5,stroke:#ea580c,color:#000
+    style CC fill:#dbeafe,stroke:#2563eb,color:#000
+    style SK fill:#f5f5f5,stroke:#6c757d,color:#000
+    style TG fill:#dbeafe,stroke:#2563eb,color:#000
+    style TR fill:#dbeafe,stroke:#2563eb,color:#000
+    style PW fill:#ede9fe,stroke:#7c3aed,color:#000
+    style AP fill:#ede9fe,stroke:#7c3aed,color:#000
+    style SR fill:#ede9fe,stroke:#7c3aed,color:#000
+    style OUT fill:#f5f5f5,stroke:#6c757d,color:#000
 ```
 
 - **Skills**：AAA（Arrange-Act-Assert）パターン、命名規約、カバレッジ基準
@@ -262,6 +324,17 @@ flowchart LR
     IM & TG <--> C7["Context7 MCP<br/>ライブラリ最新仕様"]
     IM & TG <--> DB["Postgres MCP<br/>スキーマ参照"]
     IM & TG --> OUT["📄 実装差分 + PR"]
+
+    style H fill:#ffedd5,stroke:#ea580c,color:#000
+    style CC fill:#dbeafe,stroke:#2563eb,color:#000
+    style SK fill:#f5f5f5,stroke:#6c757d,color:#000
+    style IM fill:#dbeafe,stroke:#2563eb,color:#000
+    style TG fill:#dbeafe,stroke:#2563eb,color:#000
+    style GH fill:#ede9fe,stroke:#7c3aed,color:#000
+    style SR fill:#ede9fe,stroke:#7c3aed,color:#000
+    style C7 fill:#ede9fe,stroke:#7c3aed,color:#000
+    style DB fill:#ede9fe,stroke:#7c3aed,color:#000
+    style OUT fill:#dcfce7,stroke:#16a34a,color:#000
 ```
 
 - **Skills**：コーディング規約、テスト同時生成ルール、PR テンプレート
@@ -282,6 +355,16 @@ flowchart LR
     RA & DW & DR <--> C7["Context7 MCP<br/>最新ライブラリ仕様"]
     RA & DW & DR <--> NT["Notion MCP<br/>社内ナレッジ"]
     RA & DW & DR --> OUT["📄 ドキュメント差分"]
+
+    style H fill:#ffedd5,stroke:#ea580c,color:#000
+    style CC fill:#dbeafe,stroke:#2563eb,color:#000
+    style SK fill:#f5f5f5,stroke:#6c757d,color:#000
+    style RA fill:#dbeafe,stroke:#2563eb,color:#000
+    style DW fill:#dbeafe,stroke:#2563eb,color:#000
+    style DR fill:#dbeafe,stroke:#2563eb,color:#000
+    style C7 fill:#ede9fe,stroke:#7c3aed,color:#000
+    style NT fill:#ede9fe,stroke:#7c3aed,color:#000
+    style OUT fill:#f5f5f5,stroke:#6c757d,color:#000
 ```
 
 - **Skills**：文体・見出し階層・Mermaid 記法・引用ブロックの使い方
@@ -311,6 +394,14 @@ flowchart LR
 
     H1["👤 人間が確認"] -.->|DB設計判断| DB
     H2["👤 人間が確認"] -.->|最終レビュー| OUT
+
+    style F fill:#ede9fe,stroke:#7c3aed,color:#000
+    style DB fill:#ede9fe,stroke:#7c3aed,color:#000
+    style API fill:#ede9fe,stroke:#7c3aed,color:#000
+    style C7 fill:#ede9fe,stroke:#7c3aed,color:#000
+    style OUT fill:#dbeafe,stroke:#2563eb,color:#000
+    style H1 fill:#ffedd5,stroke:#ea580c,color:#000
+    style H2 fill:#ffedd5,stroke:#ea580c,color:#000
 ```
 
 | MCP 数 | AI の挙動 | 人間の役割 |
@@ -340,6 +431,14 @@ flowchart LR
     VDB -->|権限フィルタ適用<br/>Filter by Permissions| Search
     Search -->|許可されたチャンクのみ| LLM["LLM<br/>検索結果＋質問で生成"]
     LLM --> Ans["回答<br/>（出典リンク付き）"]
+
+    style Src fill:#f5f5f5,stroke:#6c757d,color:#000
+    style Emb fill:#ede9fe,stroke:#7c3aed,color:#000
+    style VDB fill:#f5f5f5,stroke:#6c757d,color:#000
+    style User fill:#ffedd5,stroke:#ea580c,color:#000
+    style Search fill:#ede9fe,stroke:#7c3aed,color:#000
+    style LLM fill:#dbeafe,stroke:#2563eb,color:#000
+    style Ans fill:#f5f5f5,stroke:#6c757d,color:#000
 ```
 
 > **ポイント**：権限フィルタを「検索後」ではなく**ベクトル検索のクエリ条件**として組み込むこと。検索結果を後でフィルタする方式は、件数や類似度スコアから機密情報の存在が推測できてしまう。
