@@ -593,7 +593,7 @@ flowchart LR
 | コード検索・編集（MCP連携） | Serena MCP                              | LSP ベースの symbol-level 検索・編集。大規模コードベースでのトークン消費を削減 |
 | ライブラリドキュメント（MCP連携） | Context7 MCP                      | ライブラリ・フレームワークの最新公式ドキュメントを on-demand で参照 |
 | API仕様・ドキュメント | Apidog（AI機能）/ Apidog MCP                  | Schema編集・テストケース自動生成・ドキュメント品質チェック。MCP経由で Claude Code から OpenAPI 仕様を直接参照 |
-| モック生成            | Figma AI（Make Designs）/ v0.dev（Vercel）/ Google Stitch    | 要件定義フェーズのモックファースト開発。仮SPEC.mdからUIモックを高速生成し、ステークホルダーとの反復レビューで仕様を確定する |
+| モック生成            | Claude Design                                                | 要件定義フェーズのモックファースト開発。仮SPEC.md・Figmaファイル・GitHubリポジトリを参照しながらUIモックを高速生成し、ステークホルダーとの反復レビューで仕様を確定する |
 | デザイン（MCP連携）   | Figma + Figma MCP                             | UI設計・デザイントークン管理。MCP経由で Claude Code がデザイントークン・コンポーネント仕様を取得して実装に反映 |
 | CLIエージェント       | Claude Code                                   | ターミナルでの自律的コード生成・ビルド・テスト実行         |
 | IDE（選択肢A）        | Cursor                                        | AI内蔵エディタ。補完＋エージェント機能を一体提供           |
@@ -616,14 +616,14 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    A["1. 要件定義・仕様書作成<br/>(SPEC.md)"] --> M["デザインモック作成<br/>(Figma AI / v0.dev / Google Stitch)"]
+    A["1. 要件定義・仕様書作成<br/>(SPEC.md)"] --> M["デザインモック作成<br/>(Claude Design)"]
     M --> R["ステークホルダーレビュー"]
     R -->|"フィードバック"| A
     R -->|"合意"| B["2. 基本設計<br/>(BASIC_DESIGN.md)"]
     B --> B2["3. 詳細設計<br/>(DETAIL_DESIGN.md)"]
     B2 --> B3["4. AI環境設定<br/>(CLAUDE.md + .claude/)"]
     B3 --> TS["タスク分割<br/>(Claude Code + Jira / GitHub MCP)"]
-    TS --> C["5. UI/UXデザイン<br/>(Figma AI)"]
+    TS --> C["5. UI/UXデザイン<br/>(Claude Design)"]
     C --> D["6. 実装<br/>(Claude Code主体 / IDEは微修正・レビュー)"]
     D --> E["7. コードレビュー<br/>(Copilot + Claude Code + 人間)"]
     E -->|修正| D
@@ -734,9 +734,7 @@ graph TD
     end
 
     subgraph mock["モック生成"]
-        FigmaAI["Figma AI<br/>（Make Designs）"]
-        V0["v0.dev<br/>（Vercel）"]
-        Stitch["Google Stitch"]
+        ClaudeDesign["Claude Design"]
     end
 
     Review["👥 ステークホルダーレビュー"]
@@ -747,7 +745,7 @@ graph TD
     end
 
     subgraph design["本格デザイン（5章）"]
-        Figma["Figma AI<br/>（Figma Make・画像編集等）"]
+        Figma["Figma<br/>（デザイナーが洗練）"]
     end
 
     FigmaMCP["Figma MCP → 実装フェーズへ"]
@@ -772,10 +770,10 @@ graph TD
 
 | ステップ | 担当 | アクション |
 |---|---|---|
-| モック生成 | Figma AI / v0.dev / Google Stitch | 仮SPEC.mdからモックを複数パターン生成 |
+| モック生成 | Claude Design | 仮SPEC.md・Figmaファイル・GitHubリポジトリを参照してモックを複数パターン生成。「Send to Claude Code」でhandoff bundleを出力 |
 | ステークホルダーレビュー | PM・デザイナー・エンジニア | モックを見ながら認識ズレを発見・フィードバック |
 | SPEC.md 更新 | Claude Code | フィードバックを仕様書に反映し反復（詳細は 1.9 参照） |
-| 本格デザイン | デザイナー + Figma AI（Figma Make等） | ブランドガイドライン適用・インタラクティブプロトタイプ生成で完成度を上げる |
+| 本格デザイン | デザイナー + Figma | ブランドガイドライン適用・インタラクティブプロトタイプ生成で完成度を上げる |
 | Figma MCP 連携 | Claude Code + Figma MCP | デザイントークン・コンポーネント仕様を取得し実装フェーズへ引き渡す |
 
 ---
@@ -1537,7 +1535,7 @@ SPEC.md の文章だけで合意を取ろうとすると、「文字では伝わ
 
 ```mermaid
 flowchart LR
-    A["要件ヒアリング<br/>（Claude Code）"] --> B["モック生成<br/>（Figma AI / v0.dev）"]
+    A["要件ヒアリング<br/>（Claude Code）"] --> B["モック生成<br/>（Claude Design）"]
     B --> C["ステークホルダー<br/>レビュー"]
     C -->|"認識ズレあり"| D["フィードバック収集"]
     D --> E["SPEC.md 更新"]
@@ -1558,28 +1556,15 @@ flowchart LR
 
 | ツール | 種別 | 特徴 | 推奨ユースケース |
 |---|---|---|---|
-| **Figma AI（Make Designs）** | Figmaアプリ内蔵AI | テキスト入力からFigmaフレーム・コンポーネントを直接生成。デザインシステムとの整合性が高い | デザイナー主導。本格デザインに近い精度のモックが必要な場合 |
-| **v0.dev**（Vercel） | Webサービス | テキストからReact+shadcn/uiのコードとプレビューを即生成。そのまま実装の叩き台になる | エンジニア主導。モック → 実装の距離を最短にしたい場合 |
-| **Google Stitch** | Webサービス（Google） | テキスト・スケッチ入力から高精度なUIモックを生成。Google Material Design との親和性が高く、マルチプラットフォーム対応 | デザイナー・PM主導。Material Designベースのプロダクトモック生成 |
+| **Claude Design** | Webサービス（Anthropic） | Figmaファイル(.fig)のimportでデザインシステム（カラー・タイポグラフィ・コンポーネント）を自動抽出。GitHubリポジトリ連携で既存コンポーネントパターンを参照。チャット・インラインコメント・直接編集・カスタムスライダーで反復編集。「Send to Claude Code」でhandoff bundle（コンポーネント構造・デザイントークン・レイアウト階層の構造化spec）を出力 | モック生成〜handoff一貫。FigmaインポートとGitHub連携でブランド・コードベースに整合したモックが必要な場合 |
 | **Claude Code** | CLIツール | HTMLやReactコードを生成してブラウザでプレビュー。その場で修正ループが完結する | エンジニア主導の軽量プロトタイプ検証 |
+| **v0.dev**（Vercel） | Webサービス | テキストからReact+shadcn/uiのコードとプレビューを即生成 | Claude Designが利用できない場合のフォールバック |
 
-> **Figma MCP との違い**：Figma MCP は「既存のFigmaデザインをコードに変換する」ツール。モック生成は Figma AI が担い、Figma MCP はその後の実装フェーズで活用する（詳細は 5.5 参照）。
+> **Claude Design と Figma MCP との違い**：Claude Design は「仕様書からUIモックを生成し、handoff bundleでClaude Codeに引き渡す」ツール。Figma MCP は「既存のFigmaデザインからデザイントークン・コンポーネント仕様をClaude Codeが参照する」ツール。モック生成は Claude Design が担い、Figma MCP はその後の実装フェーズで活用する（詳細は 5.5 参照）。
 
-#### プロンプト例（v0.dev）
+> **注意**：Claude Design はトークン消費が大きく（Proプランで週次制限あり）、リアルタイムコラボレーションには未対応（2026年4月時点）。Figma への直接exportは現状 Anima 経由となる。
 
-```text
-ユーザー管理画面のモックを作成してください。
-
-要件：
-- ユーザー一覧テーブル（名前・メール・ロール・ステータス）
-- 検索・フィルター機能
-- ユーザー招待ボタン
-- モバイル対応
-
-shadcn/ui コンポーネントを使用してください。
-```
-
-#### プロンプト例（Figma AI / Claude Code）
+#### プロンプト例（Claude Design）
 
 ```text
 @SPEC.md の「ユーザー管理画面」セクションをもとに、
@@ -1589,6 +1574,25 @@ shadcn/ui コンポーネントを使用してください。
 - レイアウトの設計意図
 - 主要な操作フロー（一覧 → 詳細 → 編集）
 - エラー・空状態の表示方針
+
+確定後は「Send to Claude Code」でhandoff bundleを出力してください。
+```
+
+#### プロンプト例（Claude Design：Figmaファイルと GitHub 連携時）
+
+```text
+インポートした Figma ファイルのデザインシステム（カラー・タイポグラフィ・コンポーネント）と、
+接続した GitHub リポジトリの既存コンポーネントパターンを参照して、
+ユーザー管理画面のモックを生成してください。
+
+要件：
+- ユーザー一覧テーブル（名前・メール・ロール・ステータス）
+- 検索・フィルター機能
+- ユーザー招待ボタン
+- モバイル対応
+
+既存コンポーネントと一致するものは再利用し、新規コンポーネントが必要な場合は
+デザインシステムのルールに従って定義してください。
 ```
 
 ---
@@ -2242,41 +2246,43 @@ flowchart LR
 
 ### 5.1 AIによるUIラフ案の生成（仕様 → デザイン）
 
-仕様書（SPEC.md）からいきなりFigmaで作り込むのではなく、**AIに初期のUIラフ案を生成させてから、人間のデザイナーが洗練する**ワークフローが効率的です。
+仕様書（SPEC.md）からいきなりFigmaで作り込むのではなく、**Claude Designに初期のUIラフ案を生成させてから、人間のデザイナーが洗練する**ワークフローが効率的である。Figmaファイルのインポートやリポジトリ連携でブランド・コードベースへの整合性を保ちながら、handoff bundle経由でClaude Codeへシームレスに引き渡せる。
 
 #### AIデザイン生成ツール
 
 | ツール | 特徴 | 推奨用途 |
 |--------|------|----------|
 | **Claude Code + スクリーンショット** | HTMLを生成→ブラウザで表示→スクショ撮影→AIが自己評価 | エンジニア主導のプロトタイピング |
-| **Figma AI (Make Designs / Figma Make)** | Make Designsでフレーム・コンポーネント自動生成。Figma Makeでプロンプトからインタラクティブプロトタイプを生成。画像編集AI（Erase/Isolate/Expand）も搭載 | デザイナー主導のラフ案〜本格デザイン |
-| **Google Stitch** | テキスト・スケッチからGoogle Material Designに準拠した高精度UIを生成 | PM・デザイナー主導。Material Designベースのプロダクト |
+| **Claude Design** | Figmaファイルインポートでデザインシステムを自動抽出。GitHub連携で既存コンポーネントを参照。チャット・インライン編集・カスタムスライダーで反復。「Send to Claude Code」でhandoff bundle出力 | PM・デザイナー主導のラフ案〜handoff。ブランド整合性とコード整合性を両立させたい場合 |
 
 #### ワークフロー：仕様書 → AIラフ案 → デザイナーの洗練
 
 ```mermaid
 sequenceDiagram
     participant PM as PM / エンジニア
-    participant AI as AI (Claude Code / Figma AI)
+    participant CD as Claude Design
     participant Designer as デザイナー
-    participant Figma as Figma
-    
-    PM->>AI: SPEC.mdの画面要件を渡す
-    AI->>AI: UIラフ案を複数パターン生成
-    AI-->>PM: 3案のプロトタイプを提示
-    PM->>Designer: 最も良い案を共有
-    Designer->>Figma: ラフ案をベースに本格デザイン
-    Note over Designer,Figma: ブランドガイドライン適用<br/>インタラクション設計<br/>レスポンシブ対応
-    Designer-->>PM: Figmaデザイン完成
+    participant CC as Claude Code
+
+    PM->>CD: SPEC.md・Figmaファイル・GitHubリポジトリを渡す
+    CD->>CD: デザインシステム抽出・コンポーネントパターン参照
+    CD->>CD: UIラフ案を複数パターン生成
+    CD-->>PM: 3案のモックを提示
+    PM->>Designer: 最も良い案を共有（チャット・インライン編集で反復）
+    Designer->>CD: ブランドガイドライン適用・洗練
+    Note over Designer,CD: インラインコメント・カスタムスライダーで反復編集
+    CD-->>CC: Send to Claude Code（handoff bundle）
+    Note over CD,CC: コンポーネント構造・デザイントークン<br/>レイアウト階層を含む構造化spec
 ```
 
-**AIへのプロンプト例（Claude Code）：**
+**プロンプト例（Claude Design）：**
 
 ```text
 以下の仕様に基づいて、ダッシュボード画面のUIを3パターン設計してください。
 
 仕様：@SPEC.md の「ダッシュボード画面」セクション
-技術スタック：React + Tailwind CSS
+参照：インポートしたFigmaファイルのデザインシステム
+参照：接続したGitHubリポジトリの既存コンポーネント
 要件：
 - サイドバーナビゲーション
 - KPIカード（売上、ユーザー数、コンバージョン率）
@@ -2284,9 +2290,12 @@ sequenceDiagram
 - モバイルファースト設計
 
 各パターンの設計意図（なぜそのレイアウトにしたか）も説明してください。
+確定後は「Send to Claude Code」でhandoff bundleを出力してください。
 ```
 
-> **ポイント**：AIが得意なのは「それっぽいUI」の高速な量産。ブランドの世界観やユーザー心理を踏まえた「こだわり」は人間のデザイナーが加える。AIは速度、人間は品質を担当するのが理想の分業。
+> **ポイント**：Claude Design が得意なのは「ブランド・コードベースに整合したUIの高速生成」。ブランドの世界観やユーザー心理を踏まえた「こだわり」は人間のデザイナーが加える。handoff bundleでClaude Codeへ直接引き渡せるため、モック→実装の距離が短くなる。
+
+> **注意**：Claude Design はトークン消費が大きく（Proプランで週次制限あり）、リアルタイムコラボレーションには未対応（2026年4月時点）。Figmaへの直接exportは現状 Anima 経由となる。Claude Opus 4.7 をデフォルトモデルとして使用する。
 
 ### 5.2 AIによるデザインレビュー・評価
 
