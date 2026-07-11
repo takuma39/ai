@@ -31,8 +31,12 @@ AIを活用した開発手法・ツールに関する技術資料を作成・管
 ## 情報の正確性基準
 
 - ツール名・バージョン・日付は必ず最新情報に基づく（知識カットオフ: 2025年8月）
-- 現時点（2026年4月）での推奨モデル：Claude Sonnet 4.6 / Claude Opus 4.6
-- MCP の Linux Foundation（AAIF）移管：2025年12月9日
+- 現時点（2026年7月）での推奨モデル：**Claude Sonnet 5**（デフォルト） / **Claude Opus 4.8** / **Claude Fable 5**（最難度）
+  - モデルID：`claude-sonnet-5` / `claude-opus-4-8` / `claude-fable-5` / `claude-haiku-4-5-20251001`
+  - Sonnet 5 以降は Adaptive Thinking がデフォルトON（Extended Thinking は廃止）
+- MCP の Linux Foundation（AAIF）移管：2025年12月9日（2026年3月時点で SDK 月次DL 9,700万）
+- Antigravity は 2.0 でIDEではなくエージェントオーケストレーションデスクトップアプリに再定義（2026年5月、Google I/O 2026）
+- Devin は 2.0 で $500/月 → $20/月〜 に大幅値下げ、Cognition が Windsurf を買収し傘下統合（2025年12月）
 - 数値・仕様は出典が不明な場合は「〜目安」「〜程度」と明記する
 
 ## セクション構成パターン
