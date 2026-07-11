@@ -603,12 +603,14 @@ flowchart LR
 | エージェントオーケストレーター | Antigravity 2.0（デスクトップアプリ）    | 複数AIエージェントの並列オーケストレーション専用。IDE機能は削除され Antigravity IDE（VSCode fork）と並立 |
 | データベース（MCP連携）| Postgres MCP                                  | AIによるスキーマ参照・クエリ実行の支援                     |
 | 自律エージェント      | Devin 2.0                                     | 反復タスクの自動化。2026年に $500/月 → $20/月〜（従量課金 ACU）へ大幅値下げ |
-| テスト自動化          | Playwright MCP                                | E2Eテスト自動生成・実行                                    |
+| テスト自動化          | Playwright MCP / Playwright Agents（v1.56+）  | E2Eテスト自動生成・実行・AI探索的テスト（Planner/Generator/Healer） |
 | UX解析（MCP連携）     | Amplitude / Mixpanel / GA4 + Analytics MCP    | ユーザー行動分析・離脱検知・AIによるUX改善提案             |
-| 監視・運用（MCP連携） | Datadog MCP                                   | 障害ログ・メトリクスの自動取得、根本原因調査               |
-| コミュニケーション（MCP連携） | Slack MCP                             | 過去の議論コンテキスト検索、インシデント報告と承認         |
-| セキュリティ          | GitHub Secret Scanning                        | シークレット漏洩・脆弱性検出                               |
-| AIゲートウェイ        | AWS Bedrock Guardrails                        | プロンプトフィルタ・機密情報マスキング・コスト管理         |
+| 監視・運用（MCP連携） | Datadog MCP / Dynatrace Davis AI / PagerDuty AIOps / Grafana AI Observability | AIOps・異常予測・自然言語RCA・LLMコスト管理 |
+| **エンタープライズファイル（MCP連携）** | **Box MCP**（公式・PDF/Excel/Word対応） / SharePoint「Work IQ」MCP / Google Drive MCP | Excel/PDF/Word の検索・要約・書き戻し。既存パーミッションを継承 |
+| コミュニケーション（MCP連携） | **Slack MCP**（公式・2026/2/17 GA・RTS API） | 過去の議論コンテキスト検索、インシデント報告と承認 |
+| セキュリティ（AI自動化）| GitHub Copilot Autofix / Snyk Code (DeepCode AI) / Semgrep Assistant | CodeQL 検出→AI自動修正 PR（中央値28分・3倍高速）、依存脆弱性の自動対応 |
+| コード品質（AI検出）  | SonarQube AI Code Assurance / DeepSource / CodeScene | AI生成コード専用ゲート・アンチパターン検出・CodeHealth スコア |
+| AIゲートウェイ        | AWS Bedrock Guardrails / Portkey（OSS 2026/3〜） / LiteLLM | プロンプトフィルタ・機密情報マスキング・250以上のLLM統合 |
 
 ### ツール連携図
 
@@ -2791,14 +2793,16 @@ Devinは、Claude CodeやCursorのような「手元のエディタで動くAI�
 | ---------------- | -------------------------------------------- | --------------------------------- |
 | デザイン         | Figma MCP, Framelink                         | デザインからコード生成            |
 | プロジェクト管理 | Jira MCP, GitHub MCP                         | Issue参照・PR作成                 |
-| ドキュメント     | Notion MCP, Confluence MCP, Context7 MCP（Stars 17,300+） | 仕様書参照・ライブラリ最新ドキュメント |
+| ドキュメント     | Notion MCP（公式）, Confluence MCP（Atlassian公式）, Context7 MCP（Stars 17,300+） | 仕様書参照・ライブラリ最新ドキュメント |
+| **エンタープライズファイル** | **Box MCP**（Box公式）, Google Drive MCP（Google公式）, SharePoint/OneDrive「Work IQ」MCP（Microsoft公式） | Excel/PDF/Word の検索・要約・書き戻し。既存Boxパーミッションを継承 |
+| **コラボレーション** | **Slack MCP**（Slack公式・2026/2/17 GA・RTS API連携） | 過去メッセージ検索・スレッド取得・ナレッジ活用 |
 | コード検索・編集 | Serena MCP（LSP 40言語対応・Stars 4,800+）   | symbol-level の意味的検索と編集   |
 | データベース     | Postgres MCP                                 | スキーマ参照・クエリ実行          |
-| モニタリング     | Datadog MCP, Grafana MCP                     | メトリクス参照                    |
+| モニタリング     | Datadog MCP, Grafana MCP（AI Observability連携） | メトリクス参照・LLMコスト管理  |
 | ブラウザ         | Playwright MCP（Stars 30,000超・エコシステム2位） | E2Eテスト・ブラウザ操作      |
 | IaC              | **Terraform MCP**（2026/6/11 GA）, Pulumi MCP | Registry参照・Stacks管理・インフラ変更説明 |
 | K8s              | k8sgpt MCP Server（v0.4.14+）                | クラスタ分析・ポッドログ取得       |
-| SaaS連携         | HubSpot, Salesforce, Slack, Docker Hub 等    | エンタープライズ用途（登録14,000+）|
+| SaaS連携         | HubSpot, Salesforce, Docker Hub 等           | エンタープライズ用途（登録14,000+）|
 
 ### 6.7 テスト駆動開発（TDD）with AI
 
@@ -2968,6 +2972,135 @@ Claude Code の `Read` はファイル全体を読み込むため、1 ファイ�
 通常、MCP を増やすとコンテキストが膨張するが、Serena は**追加しても総コンテキストが減るタイプの例外**である。symbol 操作が `Read` / `Grep` の大部分を置換するため、ツール説明分の増加を実操作での削減が上回る。
 
 > **ポイント**：効果は LSP の成熟度に依存する。TypeScript / Python / Go / Rust では大きな恩恵がある一方、LSP が貧弱な言語や独自 DSL では十分に機能しない。導入前に対象プロジェクトの主要言語で symbol 解決が通るか小規模に検証する。
+
+### 6.13 Box MCP × 社内資料活用（Excel / PDF / Word）
+
+多くの現場では、要件定義書・議事録・Excel の管理シートなどが **Box**（または SharePoint / Google Drive）に集約されています。Box MCP を Claude Code に接続することで、これらの社内資料を AI が横断的に検索・要約・書き戻しできるようになります。
+
+> **Box MCP の重要ポイント**（2026年7月時点）：
+> - **提供元**：Box 公式（`github.com/box-community/mcp-server-box`）+ Box ホスト型（クラウド）
+> - **対応形式**：PDF / Word / Excel / PowerPoint の読み書き（2025年末追加、組織単位で有効化）
+> - **認証**：OAuth 2.1（ユーザー権限）または CCG（サービスアカウント／`BOX_SUBJECT_TYPE=enterprise`）
+> - **Box AI 連携**：`Ask Box AI about a file` / `Ask Box AI about a Hub` でファイル内容を LLM に読ませずに要約可能
+> - **セキュリティ**：Box のネイティブ権限がそのまま適用され、AIがアクセス権を持たないファイルは参照不可
+
+#### 主要ツール
+
+| ツール | 用途 |
+|---|---|
+| `box_search_files` | クエリ・フィルタでファイル/フォルダ検索 |
+| `box_ai_ask_file` | ファイル単体への自然言語質問（PDF・Excel対応） |
+| `box_ai_ask_hub` | Hub（フォルダ群）への横断的な質問 |
+| `box_ai_extract_structured_enhanced` | OCR ベースのメタデータ構造化抽出（TIFF/PNG/JPEG/PDF） |
+| ファイル CRUD | 検索したExcelを開き・編集・Boxに保存し直す完全ループが可能 |
+
+#### 活用ワークフロー：Excelで管理された要件定義を Claude Code に取り込む
+
+```mermaid
+sequenceDiagram
+    participant Dev as 開発者
+    participant CC as Claude Code
+    participant BoxMCP as Box MCP
+    participant Box as Box AI
+
+    Dev->>CC: 「プロジェクトXの要件を整理して SPEC.md 化して」
+    CC->>BoxMCP: box_search_files("要件定義 プロジェクトX")
+    BoxMCP->>Box: 検索実行（ユーザー権限を継承）
+    Box-->>BoxMCP: ヒット一覧（Excel / PDF / Word のID）
+    BoxMCP-->>CC: ファイルリスト
+    CC->>BoxMCP: box_ai_ask_file(id, "機能要件を箇条書きで")
+    BoxMCP->>Box: Box AI にファイル解析を依頼
+    Box-->>BoxMCP: 構造化された要件（バイナリはローカルに流れない）
+    BoxMCP-->>CC: テキスト回答
+    CC->>Dev: SPEC.md ドラフトを生成
+```
+
+**プロンプト例**
+
+```text
+@box-mcp で「プロジェクトX 要件定義」を検索し、
+以下の手順で SPEC.md を作成してください。
+
+1. box_search_files で該当フォルダの Excel と PDF を全件取得
+2. 各ファイルに box_ai_ask_file で「機能要件」「非機能要件」「制約条件」を質問
+3. 回答を統合し、docs/SPEC.md に SDD 形式で出力
+4. 出典として Box ファイルの ID と URL を末尾に注記
+```
+
+> **ポイント**：Excel のバイナリは Claude Code のコンテキストに流れず、Box AI 側でパースされてテキスト化された結果のみが返る。ローカルPCへのダウンロードを伴わないため、機密性の高い社内資料でも安全に活用できる。全操作は Box の監査ログに記録される。
+
+#### 代替：SharePoint / OneDrive / Google Drive
+
+| プラットフォーム | MCP サーバー | 特徴 |
+|---|---|---|
+| SharePoint / OneDrive | Microsoft 公式「**Work IQ**」MCP（2026/3 刷新） | 33ツール、Microsoft 365 統合、旧統合サーバーは 2026/3/13 で廃止 |
+| Google Drive | Google 公式「`drivemcp.googleapis.com`」（2026/5/21 更新） | Drive・Docs・Sheets・Slides・Calendar 統合 |
+
+### 6.14 Slack MCP × 過去議論・ナレッジ活用
+
+インシデント対応や設計判断の背景など、**Slack に埋もれた組織のナレッジ**は開発の重要な文脈です。Slack MCP を使うことで、AI が過去のスレッドを横断検索し、決定経緯を踏まえた提案が可能になります。
+
+> **Slack MCP の重要ポイント**（2026年7月時点）：
+> - **提供元**：Slack 公式（`docs.slack.dev`）※Anthropic の参照実装は 2025年5月にアーカイブ
+> - **GA日**：2026年2月17日。同時に **Real-time Search (RTS) API**（旧 Data Access API の後継）も GA
+> - **成長率**：GA 後、RTS クエリ数・MCPツール呼び出しともに 25倍増
+> - **認証**：`xoxp-*`（User OAuth）> `xoxb-*`（Bot Token）> `xoxc-*`+`xoxd-*`（セッション）の優先順
+> - **読み取り専用モード**：`SLACK_MCP_READ_ONLY=true` で投稿を禁止（監査向け）
+
+#### 主要機能
+
+| 機能 | 用途 |
+|---|---|
+| RTS API による検索 | 日付・ユーザー・コンテンツタイプでフィルタ検索 |
+| スレッド全履歴取得 | インシデント対応の議論を丸ごと取得 |
+| DM / グループDM 取得 | 個別議論の参照（権限に依存） |
+| メッセージ投稿 | チャンネル・スレッドへの返信、リアクション追加 |
+| ファイル取得 | 添付ファイルのメタデータ・コンテンツ取得 |
+
+#### 活用ワークフロー：過去インシデントから対応案を組み立てる
+
+```mermaid
+sequenceDiagram
+    participant SRE as SRE
+    participant CC as Claude Code
+    participant SlackMCP as Slack MCP
+    participant RTS as Slack RTS API
+
+    SRE->>CC: 「今回の DB スロークエリ、過去に類似があれば対応手順を要約」
+    CC->>SlackMCP: search_messages("DB slow query", #incident-*)
+    SlackMCP->>RTS: RTS クエリ発行
+    RTS-->>SlackMCP: マッチしたスレッド一覧
+    SlackMCP-->>CC: スレッドID群
+    CC->>SlackMCP: get_thread_replies(id)
+    SlackMCP-->>CC: 議論の全履歴
+    CC->>SRE: 類似事象3件の対応手順・原因・恒久対応をまとめたレポート
+    Note over CC,SRE: 必要なら post_message で当該インシデントスレッドに要約を返信
+```
+
+**プロンプト例**
+
+```text
+@slack-mcp を使い、以下の手順で「決済APIタイムアウト」の対応案を作成してください。
+
+1. #incident-* チャンネル群を対象に "決済 タイムアウト" で過去1年の RTS 検索
+2. ヒットしたスレッド上位5件の全履歴を取得
+3. 各インシデントの「症状／原因／恒久対応」を整理
+4. 現在の障害（Datadog のログを @datadog-mcp で取得）と比較し、
+   最も類似度の高い過去事例に基づいて対応手順ドラフトを提示
+5. --dry-run モードで、投稿は行わずレポートのみ生成
+```
+
+#### 想定される活用シーン
+
+| シーン | 具体的な使い方 |
+|---|---|
+| **設計判断の背景把握** | 「この API を非同期化した理由」を Slack の議論から自動収集 |
+| **オンボーディング** | 新メンバーが「なぜこの構成？」と質問すると過去の議論を要約 |
+| **インシデント対応** | 類似事象の対応手順・恒久対応を自動抽出してドラフト提示 |
+| **意思決定の監査** | 「この機能をリリースした際の議論」を PR コメントに自動リンク |
+| **ナレッジ抽出** | 長期スレッドの結論だけを Notion / Confluence に転記 |
+
+> **ポイント**：Slack MCP は AI の「組織文脈の理解力」を桁違いに引き上げる。ただし DM やプライベートチャンネルは権限に基づき絞られるため、Bot Token より **User OAuth Token（`xoxp-*`）で個人権限をそのまま継承させる**運用が現実的。監査目的では `SLACK_MCP_READ_ONLY=true` を必ず有効化する。
 
 ---
 
@@ -3275,6 +3408,86 @@ Playwright MCP で @src/components/Card.tsx を localhost:3000 でレンダリ�
 
 > **注意**：WSL2 や CI コンテナ環境では、Chromium の起動が不安定になりスクショが欠損することがある。Playwright MCP 起動前に `npx playwright install --with-deps` でブラウザ依存を確実にインストールし、失敗時はリトライ回数を上限付きで設定する。
 
+### 8.8 AI探索的テスト（AIモンキーテストの進化形）
+
+従来の「モンキーテスト」（ランダム入力による障害探し）は、ノイズが多くシグナルが低いという課題がありました。2026年時点のベストプラクティスは、**AI エージェントが前ステージの観察結果をもとに次のアクションを決定する「好奇心駆動型」の探索的テスト**です。
+
+#### 従来のモンキーテスト vs AI 探索的テスト
+
+| 項目 | 従来のモンキーテスト | AI 探索的テスト（2026年） |
+|---|---|---|
+| 入力生成 | ランダム | 画面状態を解釈して次アクションを推論 |
+| 発見できるバグ | クラッシュ・例外系のみ | ロジック矛盾・ワークフロー切断・アクセシビリティ違反も検出 |
+| コンテキスト | なし | ユーザーストーリー・SPEC.mdを踏まえた探索 |
+| レポート | スタックトレースのみ | 再現手順・影響範囲・修正候補まで提示 |
+
+#### 実装パターン：Playwright MCP + AI Agent
+
+Playwright MCP は 40 以上のツール（navigate / click / type / assert 等）を LLM に提供し、AI はアクセシビリティツリーを構造化データとして解釈します。**Vision モデル不要**でスクリーン内の要素を認識できるため、GPU コストなしでステージング環境に常時稼働させられます。
+
+```mermaid
+flowchart LR
+    A["ステージング環境"] --> B["Playwright MCP<br/>（40+ツール）"]
+    B --> C["AI Agent（Claude Code）"]
+    C -->|"次アクション推論"| B
+    C --> D["バグレポート<br/>再現手順+修正候補"]
+    D --> E["GitHub Issue自動起票"]
+    E --> F["Copilot Autofix / Cline<br/>修正PR作成"]
+
+    style A fill:#f5f5f5,stroke:#6c757d,color:#000
+    style C fill:#dbeafe,stroke:#2563eb,color:#000
+    style D fill:#fee2e2,stroke:#dc2626,color:#000
+    style E fill:#ffedd5,stroke:#ea580c,color:#000
+    style F fill:#dcfce7,stroke:#16a34a,color:#000
+```
+
+#### プロンプト例：AIによる探索的テスト
+
+```text
+@playwright-mcp を使い、以下の目標で staging.example.com を1時間探索してください。
+
+【目標】
+新規登録 → 商品購入 → キャンセルフローを、
+20種類の異なるペルソナ視点で動線を辿り、
+以下のアンチパターンを発見してください：
+
+1. 5秒以上応答がない画面（体感パフォーマンス問題）
+2. ボタンが押せてしまうが機能しない（デッド状態）
+3. エラー時にリトライ手段が示されない
+4. 戻るボタンで状態が壊れる
+5. モバイル幅（375px）でレイアウト崩れ
+
+【出力】
+発見した問題ごとに JSON で以下を出力：
+{ severity, reproduce_steps, screenshot_path, suggested_fix, related_spec_section }
+
+【停止条件】
+- 60分経過、または30個の Issue 候補が集まったら停止
+```
+
+#### 探索的テストの主要ツール比較
+
+| ツール | 特徴 |
+|---|---|
+| **Playwright MCP + Claude Code**（推奨） | OSS、既存Playwright資産を活用、コスト極小 |
+| **testRigor** | 平易な英語でテストを記述、自律的に UI クロールで自然言語テストケース生成 |
+| **Mabl** | 統合ダッシュボードで機能／視覚／パフォーマンスを一括管理 |
+| **Reflect** | ノーコード、UI変更に自動追従するインテリジェントセレクタ |
+| **Gremlin**（Chaos Engineering） | ML でインシデント履歴から障害仮説を自動生成、「Reliability Score」でシステム健全性を数値化 |
+
+#### AIコード・アンチパターン検出（コード側）
+
+UI 側の探索と同時に、コード側でも AI がアンチパターン検出を継続的に実行します。
+
+| ツール | 特徴 |
+|---|---|
+| **SonarQube「AI Code Assurance」** | 自社データで「42%のコミットが AI 生成」と観測 → AI生成コード専用ゲートを提供 |
+| **DeepSource** | 確定的解析（5,000+ルール）+ AI レビューエージェント。Autofix対応、偽陽性率が業界最低水準 |
+| **CodeScene** | 静的解析ではなく「変更頻度」「担当者」の行動データで実際に問題を起こしているデット項目を特定。MCP 統合で AI 生成コードに CodeHealth スコアをリアルタイム付与 |
+| **Semgrep Assistant「Memories」** | 過去トリアージ学習でノイズを 60% 削減、96%精度で人間判断と一致 |
+
+> **ポイント**：AI 探索テストは「バグ発見」ではなく「**バグの初動 → Issue 起票 → 修正PR ドラフト → 人間レビュー**」までを一気通貫で回すことに真価がある。夜間バッチで走らせて朝出社時に修正PRのレビューだけ行う運用が、2026年の QA/SRE のスタンダードになりつつある。
+
 ---
 
 ## 9. CI/CD・運用・高度化パターン
@@ -3339,11 +3552,68 @@ claude -p "Build failed with: $(cat build-error.log). Analyze and suggest fix." 
   --output-format stream-json
 ```
 
-### 9.4 AIOps：AIによる運用監視
+### 9.4 AIOps：AIによる運用監視・インフラ常時監視
 
-- **予測的モニタリング**：ログ・メトリクス・ユーザー行動をリアルタイム分析、障害を事前予測
-- **アラート疲労の削減**：AIが低信頼度のアラートを自動フィルタリング
-- **分散トレーシング**：複雑なマイクロサービス間の障害伝播を自動追跡
+インフラのメトリクス・ログ・トレース・ユーザー行動を **24時間 AI が監視し、異常検知 → 根本原因分析 (RCA) → 修正提案 → 自動修復** までを継続的に回すのが 2026年の AIOps 標準です。
+
+#### 主要ツール比較
+
+| ツール | 特徴と 2026年のポジション |
+|---|---|
+| **Datadog Watchdog** | 非教師あり ML で AWS / K8s の異常をリアルタイム検出。カスタム異常・外れ値・予測アラートに対応 |
+| **Dynatrace Davis AI** | **もっとも成熟した RCA 実装**。因果トポロジーで根本原因エンティティをハイライト。2026年は自然言語での問題サマリー＋修復ステップ提示、Kubernetes リソースの自動生成による「Preventive Operations」に進化 |
+| **New Relic AI Impact Report** | フルスタック（インフラ・APM・LLMワークロード）に ML 適用。2026年のレポートでは AI利用者は非利用者比 **インシデント解決 25% 高速** と報告 |
+| **PagerDuty AIOps「Virtual Responder」**（2026 Spring） | アラートノイズ削減 **91%**、Sev-2 MTTR 20〜40% 削減。異常検知→診断→Slack通知→関係者タグ付けまで人間を呼ぶ前に自動実行 |
+| **Grafana AI Observability**（GrafanaCON 2026） | OpenTelemetry ベースで LLM エージェントの会話追跡・コスト・品質を一元管理。LangChain / LangGraph / OpenAI Agents / Vercel AI SDK 統合 |
+| **k8sgpt Auto-remediation**（v0.4.31+） | Kubernetes 問題の一般的なパターンを自動修復。Prometheus / Alertmanager 統合、センシティブデータの LLM 送信前自動匿名化 |
+
+#### エンドツーエンドの仕組み：異常検知から自動修復まで
+
+```mermaid
+flowchart LR
+    subgraph Monitor["常時監視（24/7）"]
+        DW["Datadog Watchdog"]
+        K8G["k8sgpt Operator"]
+        DV["Dynatrace Davis AI"]
+    end
+    Monitor -->|"異常検知"| RCA["🧠 AI RCA<br/>因果トポロジー解析"]
+    RCA -->|"自然言語で説明"| PD["PagerDuty<br/>Virtual Responder"]
+    PD -->|"Slackにドラフト+ランブック提示"| SRE["👤 SRE"]
+    PD -.->|"自動修復ポリシー有効時"| AR["自動修復<br/>設定変更・スケール調整"]
+    SRE -->|"承認"| AR
+    AR -->|"変更後の挙動を"| Monitor
+
+    style Monitor fill:#f5f5f5,stroke:#6c757d,color:#000
+    style RCA fill:#dbeafe,stroke:#2563eb,color:#000
+    style PD fill:#ffedd5,stroke:#ea580c,color:#000
+    style AR fill:#dcfce7,stroke:#16a34a,color:#000
+    style SRE fill:#ede9fe,stroke:#7c3aed,color:#000
+```
+
+#### プロンプト例：k8sgpt + Claude Code で K8s を常時監視
+
+```text
+@k8sgpt-mcp を使い、以下の運用ループを構築してください。
+
+【監視対象】
+- namespace: production
+- リソース: Deployment / Pod / Service / Ingress
+
+【トリガー】
+Pod が CrashLoopBackOff / OOMKilled / ImagePullBackOff の
+いずれかに 5分以上留まった場合
+
+【アクション】
+1. k8sgpt analyze で根本原因を取得
+2. 該当 Deployment の manifests/ と過去24時間の変更履歴を確認
+3. 修正案を PR ドラフトとして起票（@github-mcp）
+4. #incident-k8s チャンネルに要約を投稿（@slack-mcp）
+
+【安全装置】
+本番リソースへの直接適用は禁止。必ず PR 経由・人間承認後に適用。
+```
+
+> **ポイント**：AI 監視の真価は「予兆検知 → 予防的操作 (Preventive Operations)」に移りつつある。障害が起きてから対応するのではなく、Deployment のリソース制限を実使用量ベースで自動調整するなど、**インシデント発生前に潜在問題を潰すループ**をどれだけ回せるかが 2026年の差別化ポイント。
 
 ### 9.5 LLM FinOpsとコスト最適化（プロンプトキャッシュ等）
 
@@ -4054,6 +4324,76 @@ OWASPが「Inappropriate Trust in AI Generated Code」として特定した問�
 
 - AIが生成したコードをレビューせずにそのままShipする行為
 - 対策：全てのAI生成コードにPR必須 + AIレビュー + 人間の最終確認
+
+### 11.4.5 AIによる継続的な脆弱性検知と自動修復
+
+CVE や依存関係の脆弱性、コード内部の脆弱パターンを **AI が 24時間検知し、自動で修正 PR を作る仕組み** が 2026年のスタンダードになりつつあります。従来の「週次スキャン → 手動対応」から「常時スキャン → AI が Draft PR → 開発者はレビューだけ」に移行することが推奨されます。
+
+#### 主要ツール比較（2026年7月時点）
+
+| ツール | エンジン | 特徴 |
+|---|---|---|
+| **GitHub Copilot Autofix**（GitHub Advanced Security） | CodeQL + GPT-4o + Coding Agent | 「Generate fix」で修正案生成 → 「Create PR with fix」で自動 PR。**修正までの中央値 28分・従来比3倍高速**。2026年6月に Azure DevOps へも拡張（Limited Public Preview） |
+| **Dependabot AI エージェント割り当て**（2026年4月〜） | Copilot Coding Agent | Dependabot アラートを「Assign to Agent」でエージェントに委譲。axios 1.x → 2.x のようなメジャーバージョンアップ（30ファイル以上）も自動解析 → PR 作成 |
+| **Snyk Code**（DeepCode AI） | 意味論的解析（データフロー・制御フロー横断） | Fix 提案 80% 正答率、**MTTR 84% 削減**。IDE 内リアルタイムスキャン（Cursor 対応） |
+| **Semgrep Assistant** | LLM + ルールベース | **ノイズ 60% 削減**、過去トリアージ学習「Memories」、リーチャビリティ解析で実際に呼ばれる脆弱関数のみ報告 |
+| **Claude Code Security**（Limited Research Preview） | Anthropic | Enterprise/Team 顧客向け。コードベース全体を Claude がスキャン → 脆弱性とパッチ案を提示 |
+| **Trivy MCP** | OSS スキャナ | MCP 経由で Claude Code から呼び出し可能。コンテナ・IaC・依存関係を横断スキャン |
+
+#### エンドツーエンドのワークフロー例
+
+```mermaid
+flowchart LR
+    A["Push / PR"] --> B["CodeQL (SAST)<br/>Dependabot (SCA)<br/>Snyk / Semgrep"]
+    B -->|"脆弱性検出"| C{"Autofix 対応?"}
+    C -->|"はい"| D["Copilot Autofix<br/>修正案生成"]
+    C -->|"依存関係"| E["Dependabot Alert<br/>→ Assign to Agent"]
+    D --> F["Draft PR 自動作成<br/>テスト付き"]
+    E --> F
+    F --> G["CI で自動テスト"]
+    G -->|"成功"| H["👤 開発者レビュー<br/>→ マージ"]
+    G -->|"失敗"| I["Agent が再試行<br/>別アプローチ"]
+    I --> F
+
+    style B fill:#fee2e2,stroke:#dc2626,color:#000
+    style D fill:#ede9fe,stroke:#7c3aed,color:#000
+    style F fill:#ffedd5,stroke:#ea580c,color:#000
+    style H fill:#dcfce7,stroke:#16a34a,color:#000
+```
+
+#### プロンプト例：Claude Code で脆弱性 → 修正 PR まで自動化
+
+```text
+以下の運用ループを .github/workflows/security-autopatch.yml として構築してください。
+
+【トリガー】
+- 毎日 02:00 UTC の定期スキャン
+- Dependabot アラート発火時
+- CodeQL アラート発火時
+
+【フロー】
+1. Trivy MCP でリポジトリを全スキャン（コンテナ・依存関係・IaC）
+2. 検出された脆弱性を CVSS スコアと exploitability で優先順位付け
+3. 修正可能な項目について Copilot Coding Agent に個別 PR 作成を委譲
+4. すべての PR について以下を含めること：
+   - 変更内容の要約（CVE ID / 影響範囲 / 修正内容）
+   - 破壊的変更の有無
+   - テスト結果
+5. High/Critical は #security-alerts に @slack-mcp で通知（人間承認 MUST）
+
+【安全装置】
+- 本番環境への直接デプロイ禁止
+- Critical レベルの脆弱性は必ず人間レビュアーを 2名以上アサイン
+```
+
+#### 運用上の注意点（2026年の教訓）
+
+> **重要**：2026年5月、Microsoft Threat Intelligence が Claude Code GitHub Action においてワークフローシークレットが漏洩しうる脆弱性を発見しました（Claude Code 2.1.128 で修正済み）。**AI エージェントに CI/CD の権限を渡す際は必ず最小権限・独立ジョブで実行し、シークレットスキャン Hook を Pre-commit だけでなく Pre-push にも設定する**こと。
+
+- AI 生成の修正パッチは**未検証・副作用の可能性あり**。必ず人間がレビュー
+- Critical/High レベルは AI に任せきらず、シニアエンジニアレビューを MUST
+- AI エージェントの GitHub トークンは `contents:write` + `pull-requests:write` に限定し、`admin` 権限は絶対に付与しない
+- 監査ログを Datadog / CloudTrail に長期保管して、後日の追跡性を確保
 
 ### 11.5 ローカルLLM / SLM（小規模言語モデル）の選択肢
 
