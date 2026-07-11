@@ -1,6 +1,6 @@
 # AI駆動開発 実践ガイド
 
-AIを活用して要件定義から実装・テストまでの開発プロセス全体を効率化する手法のまとめ（2026年4月時点）。
+AIを活用して要件定義から実装・テストまでの開発プロセス全体を効率化する手法のまとめ（2026年7月時点）。
 
 ---
 
@@ -436,11 +436,11 @@ Anthropic 公式 "Building Effective Agents" が整理する 4 パターンに�
 
 ```mermaid
 flowchart TB
-    H["👤 指示"] --> CC["Claude Code<br/>メインエージェント<br/>(Sonnet 4.6)"]
+    H["👤 指示"] --> CC["Claude Code<br/>メインエージェント<br/>(Sonnet 5)"]
     subgraph Panel["🎯 異種モデルパネル（並列）"]
-        A["sub-agent A<br/>Claude Opus 4.6<br/>深い推論・設計判断"]
-        B["sub-agent B<br/>Gemini CLI<br/>大規模コンテキスト解析"]
-        C["sub-agent C<br/>GPT via omni-ai-mcp<br/>第3視点レビュー"]
+        A["sub-agent A<br/>Claude Opus 4.8 / Fable 5<br/>深い推論・設計判断"]
+        B["sub-agent B<br/>Antigravity CLI (agy)<br/>大規模コンテキスト解析"]
+        C["sub-agent C<br/>GPT (gpt-5-codex) via omni-ai-mcp<br/>第3視点レビュー"]
     end
     CC -->|同一問いを委譲| A
     CC -->|同一問いを委譲| B
@@ -505,9 +505,9 @@ sub-agent 側では `tools: mcp__omni-ai__chat` のように MCP ツールを指
 # 指示
 本 PR の設計判断について、以下の3エージェントに独立レビューを依頼してください。
 （エージェント名は事前に `.claude/agents/` へ定義しておくこと）
-- senior-engineer-reviewer（Claude Opus 4.6 / 深い推論）
-- gemini-reviewer（Gemini CLI / 広域コンテキスト）
-- gpt-reviewer（omni-ai-mcp 経由 / 第3視点）
+- senior-engineer-reviewer（Claude Opus 4.8 / 深い推論）
+- gemini-reviewer（Antigravity CLI `agy` / 広域コンテキスト）
+- gpt-reviewer（omni-ai-mcp 経由 gpt-5-codex / 第3視点）
 
 # ルール
 1. 各エージェントは他エージェントの出力を参照せず独立に回答する（匿名化集約）
@@ -595,12 +595,14 @@ flowchart LR
 | API仕様・ドキュメント | Apidog（AI機能）/ Apidog MCP                  | Schema編集・テストケース自動生成・ドキュメント品質チェック。MCP経由で Claude Code から OpenAPI 仕様を直接参照 |
 | モック生成            | Claude Design                                                | 要件定義フェーズのモックファースト開発。仮SPEC.md・Figmaファイル・GitHubリポジトリを参照しながらUIモックを高速生成し、ステークホルダーとの反復レビューで仕様を確定する |
 | デザイン（MCP連携）   | Figma + Figma MCP                             | UI設計・デザイントークン管理。MCP経由で Claude Code がデザイントークン・コンポーネント仕様を取得して実装に反映 |
-| CLIエージェント       | Claude Code                                   | ターミナルでの自律的コード生成・ビルド・テスト実行         |
-| IDE（選択肢A）        | Cursor                                        | AI内蔵エディタ。補完＋エージェント機能を一体提供           |
-| IDE（選択肢B）        | VS Code + GitHub Copilot                      | 補完・PR作成・コードレビュー支援                           |
-| IDE（選択肢C）        | Antigravity                                   | AIエージェント統合型IDE。マルチエージェント並列実行・タスク分解に特化 |
+| CLIエージェント       | Claude Code / OpenAI Codex CLI / Antigravity CLI (`agy`) | ターミナルでの自律的コード生成・ビルド・テスト実行。Codex CLI は `gpt-5-codex` をデフォルトモデルに採用、Antigravity CLI は 2026/6/18 に Gemini CLI から改称 |
+| IDE（選択肢A）        | Cursor v3                                     | AI内蔵エディタ。Side Chat・Cloud Agents・JetBrains/iOS 対応（v3.11 時点） |
+| IDE（選択肢B）        | VS Code + GitHub Copilot                      | 補完・PR作成・コードレビュー支援。Copilot Workspace（GA）で複数エージェントを並列実行可能 |
+| IDE（選択肢C）        | Windsurf 2.0                                  | Cognition傘下。SWE-1.5 モデルと Codemaps を搭載した高速AI IDE |
+| IDE（OSS選択肢）      | Cline（VS Code 拡張）/ Zed AI                 | Cline は自前APIキーで動くOSSエージェント。Zed は Rust製高速エディタで Agent Client Protocol (ACP) 対応 |
+| エージェントオーケストレーター | Antigravity 2.0（デスクトップアプリ）    | 複数AIエージェントの並列オーケストレーション専用。IDE機能は削除され Antigravity IDE（VSCode fork）と並立 |
 | データベース（MCP連携）| Postgres MCP                                  | AIによるスキーマ参照・クエリ実行の支援                     |
-| 自律エージェント      | Devin                                         | 反復タスクの自動化（検証用途）                             |
+| 自律エージェント      | Devin 2.0                                     | 反復タスクの自動化。2026年に $500/月 → $20/月〜（従量課金 ACU）へ大幅値下げ |
 | テスト自動化          | Playwright MCP                                | E2Eテスト自動生成・実行                                    |
 | UX解析（MCP連携）     | Amplitude / Mixpanel / GA4 + Analytics MCP    | ユーザー行動分析・離脱検知・AIによるUX改善提案             |
 | 監視・運用（MCP連携） | Datadog MCP                                   | 障害ログ・メトリクスの自動取得、根本原因調査               |
@@ -2295,7 +2297,7 @@ sequenceDiagram
 
 > **ポイント**：Claude Design が得意なのは「ブランド・コードベースに整合したUIの高速生成」。ブランドの世界観やユーザー心理を踏まえた「こだわり」は人間のデザイナーが加える。handoff bundleでClaude Codeへ直接引き渡せるため、モック→実装の距離が短くなる。
 
-> **注意**：Claude Design はトークン消費が大きく（Proプランで週次制限あり）、リアルタイムコラボレーションには未対応（2026年4月時点）。Figmaへの直接exportは現状 Anima 経由となる。Claude Opus 4.7 をデフォルトモデルとして使用する。
+> **注意**：Claude Design はトークン消費が大きく（Proプランで週次制限あり）、リアルタイムコラボレーションには未対応（2026年7月時点）。Figmaへの直接exportは現状 Anima 経由となる。Claude Opus 4.8 をデフォルトモデルとして使用する。
 
 ### 5.2 AIによるデザインレビュー・評価
 
@@ -2541,10 +2543,18 @@ claude -p "すべてのAPIエンドポイントをリストアップして" --ou
 
 > **コスト注意（FinOps観点）**：Writer/Reviewer パターンは2つの独立したセッションを使うため、トークン消費が実質2倍になる。**コアロジックやセキュリティが重要なファイルに限定して使用**し、単純な修正やUI調整には通常の1セッションで完結させるのが経済的。LLMコストの全体管理については「11.6 AIゲートウェイ」を参照。
 
-### 6.2 Cursor IDE (v2) ベストプラクティス
+### 6.2 Cursor IDE (v3) ベストプラクティス
 
 前述の通り、要件定義やMCPツール（Jira/Notion/Figma）を介した重い外部コンテキスト処理は **Claude Code** に一任します。
-一方で、Cursorは「バックグラウンドで生成されたコードの差分レビュー」「局所的なコード補完」「コードベース内部で完結するリファクタリング」において真価を発揮します。Cursorの「Composer」を中心としたエージェント機能は以下のルールで活用します。
+一方で、Cursor v3 は「Side Chat での並行調査」「Cloud Agents による隔離VM実行」「エディタ内での局所リファクタリング」において真価を発揮します。
+
+> **v3系の主要新機能**（2026年）：
+> - **Side Chat**（`/side`, `/btw`）：メイン会話を中断せずサブ質問・調査を並行実行
+> - **Cloud Agents**：隔離クラウドVMで自律動作、複数リポジトリを並列処理
+> - **エージェントトランスクリプト検索**：過去数千件の会話をコマンドパレットから全文検索
+> - **JetBrains 対応**：IntelliJ・PyCharm・WebStorm 上で Cursor が動作
+> - **Cursor for iOS**：全有料プランでベータ公開。モバイルからエージェント起動・管理
+> - **Grok 4.5 モデル対応**：長時間タスク（法務・金融含む）にも対応
 
 > **💡 Claude Codeとの使い分けの境界線**：
 > 「仕様書(SPEC.md)やFigmaを読み込んで外部要件からコードを作るタスク」はClaude Codeに委ねます。CursorのComposerは「既存クラスの全ファイルリネーム」「使われていない変数の削除」など、**コードベース内部のコンテキストだけで完結する作業**に専念させると、ハルシネーションなく最強のパフォーマンスを出します。
@@ -2553,9 +2563,10 @@ claude -p "すべてのAPIエンドポイントをリストアップして" --ou
 
 | モデル             | 用途                                             |
 | ------------------ | ------------------------------------------------ |
-| Claude Sonnet 4.6 系 | 日常的なコーディング・複数ファイルを含む機能実装 |
-| Claude Opus 4.6 / o3 系 | 複雑なアーキテクチャ設計・難解なバグ修正    |
-| Claude Haiku 4.5     | 高速な補完・単純なリファクタリング・文言修正     |
+| Claude Sonnet 5 系 | 日常的なコーディング・複数ファイルを含む機能実装（デフォルト推奨） |
+| Claude Opus 4.8 / Claude Fable 5 | 複雑なアーキテクチャ設計・難解なバグ修正・長期エージェントタスク |
+| Claude Haiku 4.5   | 高速な補完・単純なリファクタリング・文言修正     |
+| Grok 4.5           | 長時間タスク・データサイエンス／金融・法務ドメイン |
 
 #### Composer を活用した自律ワークフロー
 
@@ -2585,18 +2596,27 @@ Composerにターミナル上で自律的にテストやコマンドを実行さ
 
 メインのComposerのコンテキストを汚さずにサブタスクを進行できるため、開発のスピードを飛躍的に向上させます。
 
-### 6.3 GitHub Copilot (v2) ベストプラクティス
+### 6.3 GitHub Copilot ベストプラクティス
 
-最新の GitHub Copilot（v2）では、Claude Sonnet 4.6 や OpenAI o3 といった強力なモデルが選択可能になりました。これにより、Cursorと同等の「プロジェクト全体（Workspace）を把握し、複数ファイルを一括で自律編集するエージェント機能（Copilot Edits等）」が利用可能になっています。
+最新の GitHub Copilot では、Claude Sonnet 5 / Claude Opus 4.8、OpenAI gpt-5-codex、Google Gemini 3.5 Flash など主要モデルを横断的に選択可能。**Copilot Workspace が GA** となり、複数エージェント（Copilot・Claude・Codex）に対して**タスクを並列アサインできる GitHub ネイティブなマルチエージェント作業スペース**として稼働しています。
+
+> **2026年の主要アップデート**：
+> - **並列セッション**：複数エージェントセッションをサイドバイサイドで同時実行
+> - **統合ブラウザ（GA）**：VS Code 内でブラウザ検索・スクリーンショット・検証
+> - **Plan Agent**：コード変更前にリードオンリーで実装計画を協同ドラフト
+> - **コスト可視化**：セッション・追加Copilotクレジット単位でコスト表示
+> - **GitHub Desktop 3.6**：Copilot によるコミットメッセージ自動生成・マージコンフリクト解消統合
 
 #### モデル選択とCopilot Editsの活用
 
 従来のインライン補完（Ghost Text）と「Copilot Edits」などのエージェント型UIを組み合わせて活用するのが最新のベストプラクティスです。
 
-| 選択モデル        | 用途・得意領域                                                             |
-| ----------------- | -------------------------------------------------------------------------- |
-| Claude Sonnet 4.6 | 新規機能の実装、フロントエンドコンポーネント・UIの生成（現在もっとも推奨） |
-| GPT-4o / o3-mini  | 複雑なバックエンドロジックの構築や、難解なエラーのデバッグ                 |
+| 選択モデル              | 用途・得意領域                                                             |
+| ----------------------- | -------------------------------------------------------------------------- |
+| Claude Sonnet 5         | 新規機能の実装、フロントエンドコンポーネント・UIの生成（もっとも推奨）    |
+| Claude Opus 4.8 / Fable 5 | 大規模設計判断・複雑なリファクタリング・長期エージェント                |
+| gpt-5-codex             | 複雑なバックエンドロジック構築・数値解析・難解なデバッグ                   |
+| Gemini 3.5 Flash        | 高速・大量トークン処理（Antigravity 2.0 連携時）                           |
 
 - **Copilot Editsのアジェンティックな利用**: プロンプトウィンドウに「機能要件」や「追加したい仕様」を入力するだけで、AIがワークスペース全体の依存関係を読み取り、作成・修正すべき複数ファイルへの差分（Diff）を一度に提案します。
 - **コンテキストの分離**: 異なるタスクを連続させるとAIのパフォーマンスが落ちるため、タスクが変わるたびに新しいCopilot Editセッションを開き直すのが鉄則です。
@@ -2661,41 +2681,58 @@ gh copilot run "current branch をプッシュして PR を作成し、Copilot �
 
 > **ポイント**：CI コンテナや SSH 越しの作業など「VS Code が使えない環境」で Copilot を活かせるのが CLI の最大の利点。`SKILL.md` をリポジトリにコミットしておくと、新メンバーも `gh copilot run <skill>` だけで定型作業を再現できる。
 
-### 6.4 Antigravity ベストプラクティス
+### 6.4 Antigravity ベストプラクティス（2.0 以降）
 
-Antigravity は、マルチエージェント並列実行とタスク自動分解に特化したAI統合型IDEです。Claude CodeやCursorが「1つのエージェントが順番に作業する」モデルであるのに対し、Antigravityは**複数のAIエージェントが並列でサブタスクを処理する**アーキテクチャを採用しています。
+Antigravity は 2026年5月の Google I/O 2026 で **2.0** としてリニューアルされ、**IDEではなくエージェントオーケストレーション専用のスタンドアロンデスクトップアプリ** に再定義されました。VS Code 依存を排除し、チャットUI（Agent View）を中心に**複数エージェントの並列起動・監視・スケジュール実行**を管理します。1.x 系（VSCodeフォークのIDE）は「Antigravity IDE」として別製品で継続提供されます。
 
-> **Claude Codeとの使い分けの境界線**：
-> 大規模な機能開発・リファクタリングなど「複数の独立したサブタスクに分解できる作業」はAntigravityのマルチエージェントに委ねます。設計判断や外部コンテキスト（SPEC.md / MCP）を多く必要とするタスクはClaude Codeに一任します。
+> **重要な変更点**（2026年7月時点）：
+> - **Antigravity 2.0**：デスクトップアプリ／エージェントオーケストレーター（IDEではない）
+> - **Antigravity IDE**：従来通り VSCode fork のコードエディタ（1.x を継続）
+> - **Antigravity CLI（`agy`）**：Go製CLI。2026年6月18日で Gemini CLI から改称・移行完了
+> - **Antigravity SDK**：Python ライブラリでカスタムエージェントを構築し Google Cloud にデプロイ
+> - **Managed Agents API**：エンタープライズ向けのホスト実行環境
+>
+> 主要フローは **Gemini 3.5 Flash** が駆動し、最大5エージェント同時並列・バックグラウンドスケジュール実行に対応。
 
-#### Cursor / Copilot / Antigravity の使い分け
+#### Antigravity 4サーフェスの使い分け
 
-| 項目 | Cursor | VS Code + Copilot | Antigravity |
-|------|--------|-------------------|-------------|
-| エージェントモデル | シングル（Composer） | シングル（Copilot Edits） | マルチエージェント並列 |
-| 得意なタスク | コードベース内の局所変更・リファクタ | インライン補完・PRレビュー | 大規模タスクの並列分解・実行 |
+| サーフェス | 形態 | 主な用途 |
+|---|---|---|
+| **Antigravity 2.0** | デスクトップアプリ | エージェント並列起動・監視・スケジュール実行 |
+| **Antigravity IDE** | VSCode fork | 従来のコードエディタ体験（1.x継続） |
+| **Antigravity CLI (`agy`)** | Go製CLI | ターミナルからのエージェント操作 |
+| **Antigravity SDK** | Python ライブラリ | カスタムエージェント構築・Cloud デプロイ |
+
+#### Cursor / Copilot / Antigravity 2.0 の使い分け
+
+| 項目 | Cursor v3 | VS Code + Copilot | Antigravity 2.0 |
+|------|-----------|-------------------|-----------------|
+| 形態 | AI内蔵エディタ（IDE） | IDE拡張 | エージェントオーケストレーター（デスクトップアプリ） |
+| エージェントモデル | Cloud Agents で並列可 | Copilot Workspace で並列 | ネイティブに最大5エージェント並列 |
+| 得意なタスク | エディタ内での局所変更・Side Chat | インライン補完・PRレビュー | 独立した長期タスクの並列オーケストレーション |
 | MCP連携 | ○（.cursor/mcp.json） | ○（GitHub Copilot MCP） | ○ |
-| ローカル動作 | ◎ | ◎ | ◎ |
-| 外部コンテキスト処理 | △（Claude Codeに委ねる） | △ | △（Claude Codeに委ねる） |
+| コード編集の主戦場 | エディタ内 | エディタ内 | エージェント経由（別サーフェス） |
 
 #### エージェント並列実行ワークフロー
 
 ```text
 大規模機能の実装依頼（例：認証モジュール全体のリファクタリング）
 ↓
-Antigravity がタスクを自動分解
+Antigravity 2.0 (デスクトップアプリ) がタスクを自動分解
 ├── Agent A: 認証ロジックのリファクタリング
 ├── Agent B: テストコードの更新
 └── Agent C: APIドキュメントの更新
 ↓
-各Agentが並列実行 → 完了後にマージ → 差分レビュー
+各Agentが並列実行（バックグラウンド）→ 完了通知 → 差分レビュー
 ```
 
-> **ポイント**：Antigravityの真価は「独立性の高いサブタスクを並列化できるか」にある。相互依存が強いタスクは直列処理が必要なため、タスク分解の設計が品質に直結する。
+> **ポイント**：Antigravity 2.0 は「エディタ作業」ではなく「AIチームの管理」に最適化されている。エディタ内で細かく編集したい場合は Antigravity IDE か Cursor / VS Code を併用し、長期・独立タスクは Antigravity 2.0 に投げるハイブリッド運用が推奨。
 
-### 6.5 Devin の活用パターン
+### 6.5 Devin の活用パターン（2.0 以降）
 
 Devinは、Claude CodeやCursorのような「手元のエディタで動くAI」とは異なり、**クラウド上のVM（仮想マシン）で独立して動く自律型エージェント**です。人間がSlackやWebから指示を出すと、自分でコードを読み、実装し、テストを実行し、PRを作成するところまでを自律的にこなします。
+
+> **2026年の重要変更**：Devin 2.0 で価格を **$500/月 → $20/月〜** に大幅引き下げ（Core プランは従量課金 $2.25/ACU、1 ACU ≒ 15分の自律稼働）。マルチモーダル入力（UIモック・動画）、レガシーコード移行、Collaborative PR にも対応。運営元 Cognition は 2025年12月に Windsurf を買収し、Devin と同一傘下に統合された。
 
 #### Devin vs Claude Code / Cursor の使い分け
 
@@ -2724,21 +2761,44 @@ Devinは、Claude CodeやCursorのような「手元のエディタで動くAI�
 - **必須ルール**：本番投入するコードは、Devin作成のPRでも**人間のレビューをMUST**とする
 - MCPによるJira/GitHub連携でタスク自動取得が可能
 
+### 6.5.5 その他の注目AIコーディングツール（2026年）
+
+2026年時点で採用が広がっている、または急速に注目を集めているAIコーディングツールを整理します。
+
+| ツール | 形態 | 特徴と選定理由 |
+|---|---|---|
+| **Windsurf 2.0** | AI IDE（Cognition傘下） | 独自モデル **SWE-1.5**（Claude Sonnet 4.5 比 約13倍高速）と **Codemaps** を搭載。Pro $15/月 で Cursor より安価 |
+| **OpenAI Codex CLI** | CLIエージェント | `gpt-5-codex` をデフォルトに ChatGPT デスクトップアプリと統合。最大6サブエージェント並列。エンタープライズ向け CA証明書・サンドボックスポリシー対応 |
+| **Cline** | VS Code 拡張（OSS） | 500万インストール超。自前APIキーで動作するため、DeepSeek API 等と組み合わせて月$2〜5の低コスト運用が可能 |
+| **Zed AI + Agent Client Protocol (ACP)** | Rust製高速エディタ | 起動0.12秒・入力レイテンシ2ms。JetBrains と共同策定した **ACP**（2026年1月・Apacheライセンス）で Claude Code / Codex CLI / Gemini CLI / Cursor / Cline / Copilot が Zed 上で統一動作 |
+| **Lovable / Bolt.new / Replit Agent 4** | Webベース No-code エージェント | 自然言語からアプリ生成。Replit Agent 4 は前バージョン比10倍高速化、認証・DB管理・並列タスクに対応 |
+| **Aider** | ターミナル型 OSS | 利用者は多いが Claude Code・Codex CLI の台頭により相対的ポジションは縮小傾向 |
+
+> **選定の指針**（2026年時点）：
+> - **エディタ内で作業したい** → Cursor v3 / VS Code + Copilot / Windsurf 2.0 / Zed AI
+> - **ターミナルで完結させたい** → Claude Code / OpenAI Codex CLI / Antigravity CLI
+> - **エージェント群を管理したい** → Antigravity 2.0（デスクトップ）/ Cursor Cloud Agents / Copilot Workspace
+> - **低コスト運用したい** → Cline（OSS + 自前APIキー）
+> - **クラウド完結で自律実行したい** → Devin 2.0（$20/月〜）
+
 ### 6.6 MCP（Model Context Protocol）エコシステム
 
-2024年11月にAnthropicが発表。2025年12月9日にLinux Foundation傘下のAgentic AI Foundation（AAIF）へ移管され、AI業界のデファクトスタンダードとなった。
+2024年11月にAnthropicが発表。2025年12月9日にLinux Foundation傘下のAgentic AI Foundation（AAIF）へ移管。2026年3月時点で **SDK月次DL数 9,700万**（2024年11月比 +4,750%）に達し、AI業界のデファクトスタンダードとなった。プラチナメンバーは AWS・Anthropic・Block・Bloomberg・Cloudflare・Google・Microsoft・OpenAI。対応クライアントは Claude / ChatGPT / Gemini / Microsoft Copilot / Cursor / Replit / VS Code Copilot 等主要ツールを網羅する。
 
-**Claude Code で使える主要MCPサーバー**
+**Claude Code で使える主要MCPサーバー**（2026年7月時点）
 
 | カテゴリ         | サーバー例                                   | 用途                              |
 | ---------------- | -------------------------------------------- | --------------------------------- |
 | デザイン         | Figma MCP, Framelink                         | デザインからコード生成            |
 | プロジェクト管理 | Jira MCP, GitHub MCP                         | Issue参照・PR作成                 |
-| ドキュメント     | Notion MCP, Confluence MCP, Context7 MCP     | 仕様書参照・ライブラリ最新ドキュメント |
-| コード検索・編集 | Serena MCP                                   | symbol-level の意味的検索と編集   |
+| ドキュメント     | Notion MCP, Confluence MCP, Context7 MCP（Stars 17,300+） | 仕様書参照・ライブラリ最新ドキュメント |
+| コード検索・編集 | Serena MCP（LSP 40言語対応・Stars 4,800+）   | symbol-level の意味的検索と編集   |
 | データベース     | Postgres MCP                                 | スキーマ参照・クエリ実行          |
 | モニタリング     | Datadog MCP, Grafana MCP                     | メトリクス参照                    |
-| ブラウザ         | Playwright MCP                               | E2Eテスト・ブラウザ操作           |
+| ブラウザ         | Playwright MCP（Stars 30,000超・エコシステム2位） | E2Eテスト・ブラウザ操作      |
+| IaC              | **Terraform MCP**（2026/6/11 GA）, Pulumi MCP | Registry参照・Stacks管理・インフラ変更説明 |
+| K8s              | k8sgpt MCP Server（v0.4.14+）                | クラスタ分析・ポッドログ取得       |
+| SaaS連携         | HubSpot, Salesforce, Slack, Docker Hub 等    | エンタープライズ用途（登録14,000+）|
 
 ### 6.7 テスト駆動開発（TDD）with AI
 
@@ -4377,11 +4437,18 @@ flowchart TB
 
 | タスク                   | 推奨モデル                  |
 | ------------------------ | --------------------------- |
-| 日常的なコーディング     | Claude Sonnet 4.6           |
-| 複雑なアーキテクチャ設計 | Claude Opus 4.6 / o3        |
-| 高速補完・単純タスク     | Claude Haiku 4.5            |
+| 日常的なコーディング     | Claude Sonnet 5（`claude-sonnet-5`）／デフォルト |
+| 複雑なアーキテクチャ設計 | Claude Opus 4.8（`claude-opus-4-8`）／ gpt-5-codex |
+| 最難度の推論・長期エージェント | Claude Fable 5（`claude-fable-5`、2026/6/9 GA） |
+| 高速補完・単純タスク     | Claude Haiku 4.5（`claude-haiku-4-5-20251001`） |
 | コスト重視の自動化       | Claude Haiku 4.5（非インタラクティブ） |
-| 規制産業・Azure 統制下   | **Claude on Azure**（Azure AI Foundry 経由で Haiku / Sonnet / Opus 4.5〜4.6 系を利用可。Microsoft 365 Copilot・Copilot Studio・GitHub Copilot からモデル選択可能。Microsoft for Startups クレジットは対象外） |
+| 規制産業・Azure 統制下   | **Claude on Azure**（Azure AI Foundry 経由で Sonnet 5・Opus 4.8 系を利用可。Microsoft 365 Copilot・Copilot Studio・GitHub Copilot からモデル選択可能） |
+
+> **重要な仕様変更**（Sonnet 5 以降）：
+> - Adaptive Thinking がデフォルトON。manual Extended Thinking は廃止（設定すると400エラー）
+> - temperature/top_p/top_k を非デフォルト値にすると400エラー
+> - 新トークナイザーで同一テキストが約30%多くトークン計上される
+> - コンテキスト窓は Sonnet 5・Opus 4.8・Fable 5 いずれも **1M トークン**
 
 ### セキュリティ必須チェック
 
