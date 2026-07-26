@@ -3963,6 +3963,408 @@ Terraform MCP Server を参照して、以下の AWS インフラを構築する
 
 > **ポイント**：AI 生成の IaC は生産性を大幅に向上させるが、「生成→即 apply」は危険。**必ず「AI 生成 → 静的解析 → plan → 人間レビュー → apply」のフローを守ること**。ある大規模組織では IaC の30%程度が AI 生成になった一方、静的解析なしでは設定ミスが増加したとの報告もある（目安）。
 
+### 9.12 GitHub Actions × Claude Code による開発自動化
+
+GitHub Actions と公式アクション `anthropics/claude-code-action` を組み合わせることで、PR レビュー・コメント対応・CI 失敗トリアージ・Issue 実装など CI/CD の各段階に Claude を宣言的・イベント駆動で組み込める。9.1・9.3 で示した `claude -p`（CI から直接 CLI を呼ぶ命令的な低レベル手法）の上位レイヤーとして位置づけられ、大規模チームへの展開が容易になる。
+
+#### 9.12.1 概要と位置づけ
+
+`anthropics/claude-code-action` は GitHub App を通じて PR・Issue・コメントに Claude を自律エージェントとして統合する公式アクション。9.3 で扱った `claude -p` が「シェルスクリプトの延長」として手動・命令的に Claude CLI を呼び出す低レベル手法であるのに対し、本節のアクションは GitHub イベント（push / comment / schedule など）に反応して自律的に動作する**宣言的・イベント駆動の上位レイヤー**である。
+
+**導入 4ステップ**
+
+| ステップ | 操作 |
+|---|---|
+| 1 | Claude Code CLI 上で `/install-github-app` を実行 |
+| 2 | 表示される URL から GitHub App をリポジトリへインストール |
+| 3 | `.github/workflows/` にワークフロー YAML を追加 |
+| 4 | GitHub Secrets に `ANTHROPIC_API_KEY` を登録 |
+
+**2つのアクションの違い**
+
+| アクション | 説明 | 主な用途 |
+|---|---|---|
+| `anthropics/claude-code-action@v1` | 完全版。untrusted input 対策・プロンプトインジェクション防護を内蔵 | 本番ワークフロー（推奨） |
+| `anthropics/claude-code-base-action@v1` | 低レベルラッパー。セキュリティ保護は呼び出し元の責任 | カスタムオーケストレーション用 |
+
+> **ポイント**：プロダクション環境では `claude-code-action`（完全版）を使用すること。`claude-code-base-action` は untrusted input への保護が実装者任せであり、外部からのプロンプトインジェクション対策を自前で実装しない限り使用しないこと。
+
+#### 9.12.2 2つの動作モードとトリガー
+
+v1.0 はアクション入力の `prompt` の有無でモードを自動判別する。
+
+**モード自動検出**
+
+| モード | 条件 | 挙動 |
+|---|---|---|
+| **automation モード** | `prompt` 入力あり | ワークフロー起動時に即時実行。自動レビューやバッチ処理に向く |
+| **interactive モード** | `prompt` 入力なし | コメント内の `@claude`（`trigger_phrase` で変更可）を待って起動。対話的な開発支援に向く |
+
+**主要トリガーの比較**
+
+| トリガー | イベント | 典型ユースケース |
+|---|---|---|
+| `issue_comment` / `pull_request_review_comment` | コメント内 `@claude` | メンション駆動のコード修正・質問応答 |
+| `pull_request: [opened, synchronize]` | PR 作成 / push | 自動差分レビュー（automation モード） |
+| `issues: [assigned]` | Issue アサイン | 実装タスクへの自律着手 |
+| `schedule`（cron） | 定期実行 | 夜間コード品質スキャン・依存関係更新確認 |
+| `workflow_dispatch` | 手動起動 | オンデマンドのトリアージ・分析 |
+
+**v0.x → v1.0 パラメータ移行**
+
+v1.0 では `model` / `allowed_tools` / `max_turns` / `custom_instructions` / `direct_prompt` などの個別入力が `claude_args` に統合された。
+
+```yaml
+# v0.x（旧）
+with:
+  model: claude-sonnet-5
+  max_turns: "5"
+  direct_prompt: "レビューしてください"
+
+# v1.0（新）
+with:
+  prompt: "レビューしてください"
+  claude_args: --model claude-sonnet-5 --max-turns 5
+```
+
+> **ポイント**：v1.0 では `prompt`（旧 `direct_prompt`）と `claude_args` の2入力に整理された。モデル指定は `claude_args: --model claude-sonnet-5` の形式で渡すのが推奨。`anthropic_model` 入力も README 上に存在するが、`claude_args` 方式を主として使用すること。
+
+#### 9.12.3 ユースケース①：PR 自動レビュー Bot
+
+PR の push ごとに Claude が差分を解析し、行コメントで指摘を投稿する automation モードの代表例。**最終的な Approve は必ず人間が行う**。
+
+**処理フロー**
+
+```mermaid
+flowchart LR
+    PR["PR 作成 / push"] --> GA["GitHub Actions 起動<br/>（automation モード）"]
+    GA --> Diff["差分取得<br/>（変更ファイル）"]
+    Diff --> Claude["Claude<br/>差分レビュー実行"]
+    Claude --> Comment["行コメント投稿<br/>GitHub PR"]
+    Comment --> Human["人間レビュー<br/>（最終 Approve）"]
+    Human -->|"承認"| Merge["マージ"]
+    Human -->|"修正依頼"| PR
+
+    style PR fill:#ffedd5,stroke:#ea580c,color:#000
+    style GA fill:#f5f5f5,stroke:#6c757d,color:#000
+    style Diff fill:#f5f5f5,stroke:#6c757d,color:#000
+    style Claude fill:#dbeafe,stroke:#2563eb,color:#000
+    style Comment fill:#dbeafe,stroke:#2563eb,color:#000
+    style Human fill:#ffedd5,stroke:#ea580c,color:#000
+    style Merge fill:#dcfce7,stroke:#16a34a,color:#000
+```
+
+**ワークフロー YAML**
+
+```yaml
+# .github/workflows/claude-pr-review.yml
+name: Claude PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    # fork PR はシークレットにアクセスできないため自リポジトリのブランチのみ実行
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - name: Run Claude PR Review
+        uses: anthropics/claude-code-action@v1
+        with:
+          prompt: |
+            このPRの差分をレビューしてください。
+            プロジェクト規約は CLAUDE.md、セキュリティ基準は SECURITY.md を参照してください。
+            指摘は以下の重要度で分類し、行コメントとして投稿してください：
+            - [Blocker] マージ前に必ず修正が必要な問題
+            - [Suggestion] 改善推奨だが必須ではない提案
+            - [Nit] 軽微なスタイル・命名の修正提案
+            最後に全体サマリーをPRにコメントしてください。
+            人間レビュアーが最終 Approve を判断するための補助情報として提供します。
+          claude_args: --model claude-sonnet-5 --max-turns 5 --allowedTools "Read,Grep,Glob"
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+**レビュープロンプト例**
+
+```text
+このPRの差分をレビューしてください。
+プロジェクト規約は CLAUDE.md、セキュリティ基準は SECURITY.md を参照してください。
+
+以下の観点でチェックし、指摘事項を重要度で分類して行コメントとして投稿してください：
+
+【チェック観点】
+1. セキュリティ：インジェクション・シークレット露出・認証漏れ
+2. 仕様との整合性：CLAUDE.md / SPEC.md との乖離
+3. テストカバレッジ：正常系・異常系・エッジケースの網羅性
+4. パフォーマンス：N+1クエリ・不要な同期処理
+5. 保守性：命名・責務分割・コメントの適切さ
+
+【重要度分類】
+- [Blocker] マージ前に必ず修正が必要
+- [Suggestion] 改善推奨（任意）
+- [Nit] 軽微なスタイル指摘
+
+最後に全体サマリー（承認可否と主要な指摘一覧）をPRにコメントしてください。
+AIレビューは補助情報であり、最終 Approve は人間レビュアーが判断します。
+```
+
+> **ポイント**：`--max-turns 5` でエージェントのループ上限を明示し、意図しないコスト増大を防ぐ。`[Blocker]` 指摘が自動マージのブロッカーになるかどうかは別途 Branch Protection ルールで制御する。**Approve 権限は人間が持ち、AI レビューはあくまで補助**であることを CLAUDE.md に明記しておくこと。
+
+#### 9.12.4 ユースケース②：@claude メンション駆動開発
+
+Issue や PR コメントに `@claude` とメンションするだけで、Claude がブランチ作成・実装・Draft PR 起票まで自律的に実行する interactive モードの代表例。
+
+**処理フロー**
+
+```mermaid
+flowchart LR
+    Comment["Issue / PR コメントに<br/>@claude 〜 と投稿"] --> Detect["GitHub Actions が<br/>メンション検出"]
+    Detect --> Branch["ブランチ作成<br/>（feature/claude-xxx）"]
+    Branch --> Impl["Claude が実装・修正<br/>コミット"]
+    Impl --> Draft["Draft PR 起票<br/>（変更内容を説明）"]
+    Draft --> Human["人間レビュー<br/>（最終承認）"]
+    Human -->|"LGTM"| Merge["マージ"]
+    Human -->|"追加修正依頼"| Comment2["@claude で再指示"]
+    Comment2 --> Impl
+
+    style Comment fill:#ffedd5,stroke:#ea580c,color:#000
+    style Detect fill:#f5f5f5,stroke:#6c757d,color:#000
+    style Branch fill:#f5f5f5,stroke:#6c757d,color:#000
+    style Impl fill:#dbeafe,stroke:#2563eb,color:#000
+    style Draft fill:#dbeafe,stroke:#2563eb,color:#000
+    style Human fill:#ffedd5,stroke:#ea580c,color:#000
+    style Merge fill:#dcfce7,stroke:#16a34a,color:#000
+    style Comment2 fill:#ffedd5,stroke:#ea580c,color:#000
+```
+
+**ワークフロー YAML**
+
+```yaml
+# .github/workflows/claude-interactive.yml
+name: Claude Interactive Mode
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  issues:
+    types: [assigned]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  claude:
+    runs-on: ubuntu-latest
+    # @claude を含むコメント、または自リポジトリへのアサインのみ実行。
+    # issue_comment は fork PR のコメントでもシークレットありで発火するため、
+    # author_association で書き込み権限を持つメンバーのコメントに限定する。
+    if: |
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude') && contains(fromJson('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude') && contains(fromJson('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) ||
+      (github.event_name == 'issues' && github.event.action == 'assigned')
+    steps:
+      - name: Run Claude (interactive)
+        uses: anthropics/claude-code-action@v1
+        with:
+          # prompt を書かない = interactive モード（メンション待ち）
+          claude_args: >-
+            --model claude-sonnet-5
+            --max-turns 20
+            --allowedTools "Read,Edit,Write,Bash,Glob,Grep"
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+> **ポイント**：interactive モードでは `prompt` を記述しないことでモードが自動切り替わる。`--max-turns 20` は実装タスクの複雑さに応じて調整する。`issue_comment` は fork PR のコメントでもシークレットありで発火するため、上記 `if:` の `author_association` チェックで外部コントリビューターによる無制限起動を必ず防ぐこと（詳細は 9.12.7 参照）。コードの変更権限（`contents: write`）を与える分、Claude が変更してよい範囲をプロンプトまたは CLAUDE.md の作業ルールセクションで明示的に制限すること。**実装後の PR Approve は必ず人間が行う**。
+
+#### 9.12.5 ユースケース③：CI 失敗の自動トリアージ
+
+9.2 の Self-Healing Pipeline パターンと連携し、テスト/ビルド失敗が発生した際に Claude が失敗ログを解析して根本原因の特定と修正案の提示を自動化する。**修正の実際の適用は人間の承認後に限る**。
+
+**処理フロー**
+
+```mermaid
+flowchart LR
+    Fail["テスト / ビルド失敗"] --> Log["失敗ログ収集<br/>（Actions artifact）"]
+    Log --> Trigger["@claude help triage failing CI<br/>コメント、または<br/>workflow_run トリガー"]
+    Trigger --> Analyze["Claude<br/>ログ解析・根本原因特定"]
+    Analyze --> Cause["根本原因レポート<br/>（PR コメント）"]
+    Cause --> Patch["修正パッチ案<br/>（ドラフト PR または提案コメント）"]
+    Patch --> Human["人間が承認・適用"]
+    Human -->|"適用後"| Rerun["CI 再実行"]
+
+    style Fail fill:#fee2e2,stroke:#dc2626,color:#000
+    style Log fill:#f5f5f5,stroke:#6c757d,color:#000
+    style Trigger fill:#ffedd5,stroke:#ea580c,color:#000
+    style Analyze fill:#dbeafe,stroke:#2563eb,color:#000
+    style Cause fill:#dbeafe,stroke:#2563eb,color:#000
+    style Patch fill:#dbeafe,stroke:#2563eb,color:#000
+    style Human fill:#ffedd5,stroke:#ea580c,color:#000
+    style Rerun fill:#dcfce7,stroke:#16a34a,color:#000
+```
+
+**失敗ログ解析プロンプト例**
+
+```text
+以下のCI失敗ログを解析してください。
+
+【失敗ログ】
+$(cat ci-failure.log)
+
+【解析依頼】
+1. 根本原因の特定
+   - 何が原因でCIが失敗しているか（コード・設定・依存関係）
+   - 直近の変更（git diff）との関連性
+
+2. 影響範囲
+   - 失敗しているテスト/ステップの一覧
+   - 他モジュールへの波及リスク
+
+3. 修正案（コード・設定ファイルの変更内容）
+   - 修正が必要なファイルと変更内容を具体的に提示
+   - 複数の選択肢がある場合はトレードオフを説明
+
+4. 再発防止策
+   - 同様の失敗を防ぐためのプロセス・テスト改善案
+
+修正の適用判断は人間が行います。コードを直接書き換えず、提案のみを行ってください。
+```
+
+> **YAML 設定**：9.12.3 のワークフロー YAML をベースに、`on:` を `workflow_run`（CI ワークフロー完了時）に差し替えるか、`@claude help triage failing CI` メンションを interactive モード（9.12.4）で受ける形に流用できる。`prompt:` を上記の失敗ログ解析用に置き換える。
+
+> **ポイント**：自動トリアージはあくまで「原因特定と修正候補の提示」に留め、**修正の自動 push は人間の明示的な承認なしに行わない**こと。9.2 の Self-Healing Pipeline と組み合わせる場合は、軽微な変更（依存バージョン修正など）のみ自動適用の対象とし、ロジック変更は必ず人間レビューを経由させること。
+
+#### 9.12.6 ユースケース④：Issue → 実装 PR パイプライン
+
+Issue アサインや `@claude` メンションをトリガーに、Claude が仕様の曖昧点を確認したうえで実装に着手し、Draft PR を自動起票する対話的なパイプライン。
+
+**処理フロー（対話ループ）**
+
+```mermaid
+flowchart TD
+    Issue["Issue 作成<br/>（要件・受け入れ条件を記載）"] --> Assign["担当者アサイン<br/>または @claude メンション"]
+    Assign --> Question{"曖昧点あり？"}
+    Question -->|"あり"| AskHuman["Claude が Issue コメントで<br/>仕様を質問"]
+    AskHuman --> HumanReply["人間が回答・補足"]
+    HumanReply --> Question
+    Question -->|"なし（仕様が明確）"| Impl["Claude が実装<br/>（ブランチ作成・コミット）"]
+    Impl --> Test["自動テスト実行"]
+    Test -->|"パス"| DraftPR["Draft PR 起票<br/>（実装サマリー付き）"]
+    Test -->|"失敗"| FixLoop["Claude が自己修正<br/>（max-turns 以内）"]
+    FixLoop --> Test
+    DraftPR --> Review["人間レビュー<br/>（最終 Approve）"]
+
+    style Issue fill:#ffedd5,stroke:#ea580c,color:#000
+    style Assign fill:#ffedd5,stroke:#ea580c,color:#000
+    style Question fill:#f5f5f5,stroke:#6c757d,color:#000
+    style AskHuman fill:#dbeafe,stroke:#2563eb,color:#000
+    style HumanReply fill:#ffedd5,stroke:#ea580c,color:#000
+    style Impl fill:#dbeafe,stroke:#2563eb,color:#000
+    style Test fill:#ede9fe,stroke:#7c3aed,color:#000
+    style DraftPR fill:#dbeafe,stroke:#2563eb,color:#000
+    style FixLoop fill:#dbeafe,stroke:#2563eb,color:#000
+    style Review fill:#ffedd5,stroke:#ea580c,color:#000
+```
+
+**仕様確認付き実装プロンプト例**
+
+```text
+以下の Issue を実装してください。
+
+【Issue 内容】
+${{ github.event.issue.body }}
+
+【実装ルール】
+- 実装前に、仕様として不明確な点や決定が必要な点があれば、
+  このIssueにコメントして人間の回答を待ってください。
+  「明確でない前提で実装を進める」ことは避けてください。
+- 仕様が明確になったら、以下の順序で作業してください：
+  1. feature/issue-${{ github.event.issue.number }} ブランチを作成
+  2. CLAUDE.md の「作業ルール」に従い実装
+  3. 既存テストが通ることを確認し、新機能のテストを追加
+  4. Draft PR を起票し、実装内容と動作確認手順をコメント
+
+【制約】
+- 変更対象は src/ ディレクトリ内のみ
+- データベーススキーマの変更は行わない（別Issueで対応）
+- セキュリティ要件は SECURITY.md を参照
+```
+
+> **YAML 設定**：トリガーは 9.12.4 の interactive モード YAML の `on:` に `issues: [assigned]` を加えるだけで流用できる。Issue アサイン時に自律着手させる場合は automation モードで上記 `prompt:` を設定する。
+
+> **ポイント**：上記プロンプトを YAML の `with.prompt:` に埋め込む場合、Issue 本文やブランチ番号は GitHub Actions のコンテキスト式 `${{ github.event.issue.body }}` の形式で参照する（`$` を欠くと文字列のまま Claude に渡り展開されない）。「曖昧点があれば実装前に質問する」ガードをプロンプトに必ず含めること。このガードがないと、Claude が不明確な仕様のまま実装を進め、大量の手戻りが発生する。**人間との合意形成を経てから実装に着手するループ**が長期的な品質と開発速度のバランスをとる鍵であり、最終 Approve は必ず人間が行う。
+
+#### 9.12.7 セキュリティ・コスト・権限のベストプラクティス
+
+> **権限の最小化（必須）**：
+> `permissions:` は常に最小限で明示する。差分レビューのみなら `contents: read` + `pull-requests: write` で十分。コードの修正・コミットまで行う場合は `contents: write` が必要。OIDC でクラウドリソースに接続する場合は `id-token: write` も追加する。
+
+| ユースケース | 最小 permissions |
+|---|---|
+| PR レビュー（コメント投稿のみ） | `contents: read` / `pull-requests: write` |
+| コード修正・コミット | `contents: write` / `pull-requests: write` |
+| Issue への返信 | `issues: write` |
+| OIDC（AWS / GCP）経由接続 | 上記 + `id-token: write` |
+
+> **Fork PR のリスク（重要）**：
+> fork から作成された PR はリポジトリのシークレットにアクセスできず、Action がそのまま動作しない。回避策として `pull_request_target` を使う例があるが、fork のコードをシークレットありのコンテキストで実行するリスクがあり、GitHub 公式ドキュメントでも慎重な利用が強く求められている（可能な限り回避すべき）。安全な対策は以下のいずれかを選択する：
+> - ワークフローに `if: github.event.pull_request.head.repo.full_name == github.repository` を付けて自リポジトリのブランチのみに限定する
+> - AWS Bedrock + OIDC でシークレット自体を使わない設計にする
+
+> **2026年6月に報告された脆弱性（修正版へのアップデートを推奨）**：
+> GitHub App アクターへの無条件信頼と、PR コメント経由のプロンプトインジェクションを組み合わせることでシークレット窃取が可能な脆弱性が外部研究者により開示された（深刻度は CVSS 7.8 程度とされる・正確な値は公式アドバイザリで要確認）。関連して他の Actions 連携ツールでの侵害事例も報じられている。報告によれば `v1.0.94` 以降で修正済みとされるため、バージョンを常に最新に保ち、Dependabot / Renovate による自動更新を必ず設定すること。
+
+> **コスト最適化**：
+> GitHub Actions の実行時間（分課金）と Anthropic API トークン（トークン課金）の二重課金が発生する。PR レビュー1回あたり 30,000〜150,000 input tokens 程度が目安（リポジトリ規模・変更量により大きく変動・要確認）。以下の対策でコストを削減できる：
+> - Prompt Caching を活用し、CLAUDE.md 等の静的コンテキストのキャッシュを再利用する（9.5 参照）
+> - 変更ファイルのみをコンテキストに渡し、リポジトリ全体のロードを避ける
+> - `--max-turns` で上限設定（レビュー系は 5〜10 回、実装系は 20 回程度が目安）
+> - OAuth トークン認証を使用すると API 課金ではなく Claude Max の usage budget を消費する（Max プランを持つチーム向け。正確なパラメータ名はアクション公式 README を参照）
+
+#### 9.12.8 導入チェックリスト
+
+```markdown
+## GitHub Actions × Claude Code 導入チェックリスト
+
+### セットアップ
+- [ ] Claude Code CLI で `/install-github-app` を実行し、GitHub App をインストール済み
+- [ ] `ANTHROPIC_API_KEY` を GitHub Secrets に登録済み
+- [ ] ワークフロー YAML に `permissions:` を明示し、最小権限で設定済み
+
+### セキュリティ
+- [ ] `anthropics/claude-code-action` のバージョンを最新にピン留め済み
+      （Dependabot / Renovate による自動更新を設定することを推奨）
+- [ ] fork PR からの発火を `if: github.event.pull_request.head.repo.full_name == github.repository` で制限済み
+- [ ] `pull_request_target` トリガーを使用していない（公式非推奨）
+- [ ] プロンプトインジェクション対策として外部入力（コメント本文等）をそのままプロンプトに渡していない
+
+### コスト管理
+- [ ] `--max-turns` で上限を明示設定済み（レビュー系: 5〜10 / 実装系: 20 前後）
+- [ ] 変更ファイルのみをコンテキストに渡す設計にしている
+- [ ] 月次コスト・トークン消費量をモニタリングする仕組みを用意済み
+
+### ガバナンス
+- [ ] CLAUDE.md に「AI レビューは補助・最終 Approve は人間」を明記済み
+- [ ] CLAUDE.md に Claude が変更してよい範囲（ディレクトリ・ファイル種別）を明記済み
+- [ ] PR の最終 Approve を人間 1 名以上が行う Branch Protection Rule を設定済み
+- [ ] AI が自動コミット・push できる場合の承認フローを文書化済み
+```
+
+> **ポイント**：チェックリストは「導入時の一回限り」ではなく、四半期ごとに見直すこと。特にバージョンのピン留めと fork PR 制限は、脆弱性情報が公開されるたびに確認が必要な項目となる。
+
 ---
 
 ## 10. プロンプトエンジニアリング
