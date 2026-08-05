@@ -3001,16 +3001,16 @@ sequenceDiagram
     participant Dev as 開発者
     participant CC as Claude Code
     participant BoxMCP as Box MCP
-    participant Box as Box AI
+    participant BoxAI as Box AI
 
     Dev->>CC: 「プロジェクトXの要件を整理して SPEC.md 化して」
     CC->>BoxMCP: box_search_files("要件定義 プロジェクトX")
-    BoxMCP->>Box: 検索実行（ユーザー権限を継承）
-    Box-->>BoxMCP: ヒット一覧（Excel / PDF / Word のID）
+    BoxMCP->>BoxAI: 検索実行（ユーザー権限を継承）
+    BoxAI-->>BoxMCP: ヒット一覧（Excel / PDF / Word のID）
     BoxMCP-->>CC: ファイルリスト
     CC->>BoxMCP: box_ai_ask_file(id, "機能要件を箇条書きで")
-    BoxMCP->>Box: Box AI にファイル解析を依頼
-    Box-->>BoxMCP: 構造化された要件（バイナリはローカルに流れない）
+    BoxMCP->>BoxAI: Box AI にファイル解析を依頼
+    BoxAI-->>BoxMCP: 構造化された要件（バイナリはローカルに流れない）
     BoxMCP-->>CC: テキスト回答
     CC->>Dev: SPEC.md ドラフトを生成
 ```
