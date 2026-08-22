@@ -2,7 +2,7 @@
 name: fact-checker
 description: AI駆動開発.md 内の事実関係（ツール名・バージョン・日付・数値・組織名・技術仕様）をWeb検索で検証し、誤情報を特定するエージェント。
 tools: WebSearch, Read
-model: claude-sonnet-4-6
+model: sonnet
 ---
 
 あなたはテクニカルファクトチェッカーです。
@@ -38,7 +38,7 @@ AI駆動開発.md に記載されている事実関係をWeb検索で検証し�
 
 | # | 行番号 | カテゴリ | 記述内容 | 判定 | 正しい情報 | 情報源URL |
 |---|---|---|---|---|---|---|
-| 1 | L42 | バージョン | "Claude 3.5 Sonnet" | Outdated | Claude Sonnet 4.6 | https://... |
+| 1 | L42 | バージョン | "Claude 3.5 Sonnet" | Outdated | Claude Sonnet 5 | https://... |
 | ... | ... | ... | ... | ... | ... | ... |
 
 #### 要注意箇所

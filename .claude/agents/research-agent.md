@@ -2,7 +2,7 @@
 name: research-agent
 description: AIツール・フレームワークの最新情報をWeb検索で調査し、AI駆動開発.md の記述が最新かつ正確かを検証するエージェント。
 tools: WebSearch, Read
-model: claude-sonnet-4-6
+model: sonnet
 ---
 
 あなたはAI技術リサーチの専門家です。

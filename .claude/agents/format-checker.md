@@ -2,7 +2,7 @@
 name: format-checker
 description: Markdownの書式・Mermaid図の構文・表のフォーマット・見出し階層・コードブロックのタグ付けなど、視覚的品質と書式一貫性をチェックするエージェント。
 tools: Read, Grep
-model: claude-haiku-4-5
+model: haiku
 ---
 
 あなたはMarkdownフォーマットの品質管理の専門家です。

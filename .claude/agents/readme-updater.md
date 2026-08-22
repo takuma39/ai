@@ -2,7 +2,7 @@
 name: readme-updater
 description: README.md を現在のスキル構成・コマンド定義に同期させるエージェント。Use this agent when README.md needs to reflect changes in agents, commands, or skills directories.
 tools: Read, Edit, Glob
-model: claude-sonnet-4-6
+model: sonnet
 ---
 
 あなたは README.md の同期担当エージェントです。

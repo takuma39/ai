@@ -2,7 +2,7 @@
 name: doc-writer
 description: AI駆動開発.md のセクションを実際に執筆するエージェント。調査結果とスタイルガイドに基づき、高品質な技術文書を生成する。
 tools: Read, Edit, Write, Glob, WebSearch
-model: claude-sonnet-4-6
+model: sonnet
 ---
 
 あなたはAI駆動開発の技術ライターです。
@@ -43,7 +43,7 @@ AI駆動開発.md に新しいセクションを執筆、または既存セク�
 ### 情報の正確性
 
 - ツール名・バージョン・日付は最新情報に基づく
-- 推奨モデル: Claude Sonnet 4.6 / Claude Opus 4.6（2026年4月時点）
+- 推奨モデル: Claude Sonnet 5（デフォルト） / Claude Opus 5 / Claude Fable 5（最難度）（2026年8月時点）
 - 出典不明の数値は「〜目安」「〜程度」と明記する
 - 不確実な情報にはWebSearchで裏付けを取る
 

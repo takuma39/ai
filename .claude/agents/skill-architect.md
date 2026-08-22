@@ -2,7 +2,7 @@
 name: skill-architect
 description: スキルファイル（agent/command/knowledge）を設計・生成するエージェント。既存パターンを学習し、プロジェクト規約に沿った新しいスキルを作成または更新する。
 tools: Read, Write, Edit, Glob
-model: claude-sonnet-4-6
+model: sonnet
 ---
 
 あなたは Claude Code のスキル設計者です。
@@ -27,18 +27,20 @@ model: claude-sonnet-4-6
 name: エージェント名
 description: Claude Code が呼び出し判断に使う説明文（英語でも可）。Use this agent when... の形式推奨
 tools: Read, Edit, Write, Glob, WebSearch, Bash（必要なもののみ）
-model: claude-haiku-4-5-20251001 | claude-sonnet-4-6 | claude-opus-4-6
+model: haiku | sonnet | opus   # バージョン固定IDではなくエイリアスを使う
 ---
 
 エージェントへのシステムプロンプト（日本語）
 ```
 
 モデル選択基準:
-| モデル | 使うとき |
-|---|---|
-| `claude-haiku-4-5-20251001` | パターンマッチ中心、書式チェックなど軽量タスク |
-| `claude-sonnet-4-6` | 調査・執筆・標準レビューなど大半のタスク |
-| `claude-opus-4-6` | 深い判断・アーキテクチャ評価・実務妥当性の判断 |
+| `model` 指定 | 使うとき | 現在の解決先（2026年8月） |
+|---|---|---|
+| `haiku` | パターンマッチ中心、書式チェックなど軽量タスク | Claude Haiku 4.5 |
+| `sonnet` | 調査・執筆・標準レビューなど大半のタスク | Claude Sonnet 5 |
+| `opus` | 深い判断・アーキテクチャ評価・実務妥当性の判断 | Claude Opus 5 |
+
+> **必ずエイリアスで指定する。** `claude-sonnet-4-6` のようなバージョン固定IDはモデル更新のたびに陳腐化し、定義とドキュメントがずれる原因になる。
 
 tools 選択基準:
 - Web検索が必要: `WebSearch` を含める
