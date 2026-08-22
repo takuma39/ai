@@ -2116,47 +2116,107 @@ description: プロジェクトのREST API設計規約
 
 #### Hooks の設定
 
-コード保存・編集のたびに自動実行される処理を定義：
+コード保存・編集のたびに自動実行される処理を定義する。
 
-```jsonc
+**前提①：パス・コマンドの禁止は `permissions.deny` で書く**
+
+hooks を書く前に、`permissions` で宣言的に表現できないか確認する。スクリプトを書かずに済むならそのほうが壊れにくい。
+
+```json
+// .claude/settings.json（厳密な JSON。コメントは書けない）
+{
+  "permissions": {
+    "deny": [
+      "Edit(./migrations/**)",
+      "Read(./.env)",
+      "Bash(git push --force:*)"
+    ]
+  }
+}
+```
+
+**前提②：hooks の入出力仕様**
+
+hooks が必要なのは、**書き込む内容を見て判断する**など `permissions` で表現できない場合に限られる。実装にあたって仕様を2点押さえる。
+
+| 項目 | 仕様 |
+| --- | --- |
+| 入力 | **標準入力の JSON**（`tool_name` / `tool_input` / `cwd` 等）。`$TOOL_INPUT` のような環境変数は**存在しない** |
+| 終了コード | `0`=許可 ／ **`2`=ブロック（stderr がモデルに返る）** ／ その他=ブロックされない警告 |
+
+> **`exit 1` ではブロックされない。** ここを誤ると「保護をかけたつもりで素通り」という、最も気づきにくい失敗状態になる。
+
+**設定例**
+
+インラインに長いシェルを書くと壊れやすいため、スクリプトファイルに切り出す。
+
+```json
 // .claude/settings.json
 {
   "hooks": {
-    // ツール使用後（事後）に自動実行される処理
-    "PostToolUse": [
-      {
-        // 実行条件：AIがファイルの編集（Edit）または作成（Write）を行った時
-        "matcher": "Edit|Write",
-        // 実行内容：linterを実行し、コードフォーマットの自動修正を行う
-        "hooks": [{ "type": "command", "command": "npm run lint --fix" }]
-      }
-    ],
-    // ツール使用前（事前）に実行される処理
     "PreToolUse": [
       {
-        // 実行条件：AIがファイルへの新規書き込み（Write）を行おうとした時
-        "matcher": "Write",
-        "hooks": [
-          {
-            "type": "command",
-            // 実行内容：AIの操作対象（$TOOL_INPUT）に 'migrations/' フォルダが含まれていたら、エラーを出して書き込みを強制ブロックする
-            "command": "if echo '$TOOL_INPUT' | grep -q 'migrations/'; then echo 'BLOCK: migrations folder is protected'; exit 1; fi"
-          }
-        ]
+        "matcher": "Edit|Write",
+        "hooks": [{ "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/guard-secret.sh" }]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [{ "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/format.sh" }]
       }
     ]
   }
 }
 ```
 
+```bash
+#!/usr/bin/env bash
+# .claude/hooks/guard-secret.sh — 書き込み内容にシークレットが含まれたらブロックする
+set -euo pipefail
+
+INPUT=$(cat)                                    # 標準入力から JSON を受け取る
+CONTENT=$(printf '%s' "$INPUT" | jq -r '.tool_input.content // .tool_input.new_string // ""')
+
+if printf '%s' "$CONTENT" | grep -qE '(sk-[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16})'; then
+  echo "BLOCK: APIキーらしき文字列を検出しました。環境変数経由に変更してください" >&2
+  exit 2                                        # 2 でブロック。stderr がモデルに返る
+fi
+exit 0
+```
+
+```bash
+#!/usr/bin/env bash
+# .claude/hooks/format.sh — 編集されたファイルだけを整形する
+set -euo pipefail
+
+INPUT=$(cat)
+FILE=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // ""')
+
+case "$FILE" in
+  *.ts|*.tsx|*.js|*.jsx) npx eslint --fix "$FILE" || true ;;
+esac
+exit 0
+```
+
 Hooksの活用例：
 
-- ファイル編集後に ESLint を自動実行
-- マイグレーションフォルダへの誤書き込みをブロック
-- コミット前に型チェックを強制
+- ファイル編集後に ESLint を自動実行（**編集された1ファイルのみを対象にする**）
+- 書き込み内容へのシークレット混入をブロック
+- 型チェック・テストの強制（**PostToolUse ではなく Stop hook に置く**）
 - テスト実行後に自動カバレッジレポート生成
 
-> Hooksのスクリプト自体もClaudeに生成させることができる：`"Write a hook that runs eslint after every file edit"`
+> **性能の目安**：PostToolUse は編集のたびに毎回走る。10ファイル触れば10回である。ここに置いてよいのは**単一ファイル対象で1秒以内に終わる処理**だけ。プロジェクト全体の `tsc --noEmit` やテスト全実行は Stop hook（応答完了時に1回）に置く。
+
+> **`npm run lint --fix` は動作しない。** npm が `--fix` を自身のオプションとして食うため、スクリプトに渡らない。`npm run lint -- --fix` と書く。
+
+> **導入したら必ず「ブロックされること」を確認する。** hooks の失敗モードは「何も起きずに素通りする」であり、動いていないことに気づけない。
+> ```bash
+> echo '{"tool_name":"Write","tool_input":{"content":"sk-abcdefghijklmnopqrstuvwx"}}' \
+>   | .claude/hooks/guard-secret.sh; echo "exit=$?"   # → exit=2 なら正しい
+> ```
+
+> Hooksのスクリプト自体もClaudeに生成させることができる：`"標準入力の JSON を jq で読み、違反時は stderr に理由を出して exit 2 する PreToolUse hook を書いて"`
 
 #### Subagents の設計
 
@@ -2517,7 +2577,7 @@ cat error.log | claude -p "このエラーの原因を分析して"
 
 ```bash
 # 非インタラクティブモード（CI/CD向け）
-claude -p "すべてのLintエラーを修正して" --permission-mode auto
+claude -p "すべてのLintエラーを修正して" --permission-mode acceptEdits
 
 # ファイル一括処理
 for file in $(cat files.txt); do
@@ -2529,7 +2589,7 @@ done
 claude -p "すべてのAPIエンドポイントをリストアップして" --output-format json
 ```
 
-> **注意**：`--permission-mode auto` はファイル書き込み・コマンド実行をすべて自動承認する。CI/CD など隔離された環境専用で使用し、ローカル開発環境での多用は避けること。
+> **注意**：`--permission-mode` に指定できる値は `default` / `acceptEdits` / `plan` / `bypassPermissions` である（`auto` という値は**存在しない**）。`acceptEdits` はファイル編集を自動承認する。すべての確認を飛ばす `bypassPermissions`（および `--dangerously-skip-permissions`）は、**コンテナ等の隔離環境かつネットワーク制限とセット**でのみ使用し、ローカル開発環境では使わないこと。
 
 #### Writer/Reviewer パターン（品質向上）
 
