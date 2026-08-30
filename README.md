@@ -9,7 +9,27 @@ AI を活用した開発手法・ツールに関する技術資料を作成・�
 
 ```
 AI駆動開発/
-├── AI駆動開発.md               # メイン資料（要件定義〜運用まで全フェーズ）
+├── AI駆動開発.md               # 【蓄積】調査結果を溜め込む一次ソース
+├── 構成.md                     # contents/ の構成設計書（確定方針・命名規則・テンプレート）
+├── contents/                   # 【発信】Zenn記事・スライド向けに再編集した成果物
+│   ├── README.md               # 全体目次（16セクション / 98ファイル）
+│   ├── 00_overview/            # 導入・全体像
+│   ├── 01_claude-code/         # Part 1: Claude Code の仕組み
+│   ├── 02_mcp/                 # Part 1: MCP カタログ
+│   ├── 03_rag/                 # Part 1: RAG
+│   ├── 04_multi-agent/         # Part 1: マルチエージェント・多モデル議論
+│   ├── 05_prompt-engineering/  # Part 1: プロンプトエンジニアリング
+│   ├── 10_requirements/        # Part 2: 要件定義・仕様書作成
+│   ├── 11_design/              # Part 2: 基本設計・詳細設計
+│   ├── 12_ui-ux/               # Part 2: UI/UX デザイン
+│   ├── 13_implementation/      # Part 2: 実装
+│   ├── 14_code-review/         # Part 2: コードレビュー
+│   ├── 15_test/                # Part 2: テスト活用
+│   ├── 20_github-claude/       # Part 3: GitHub × Claude
+│   ├── 21_cicd-ops/            # Part 3: CI/CD・運用・監視
+│   ├── 22_security/            # Part 3: セキュリティ
+│   └── 23_team-workflow/       # Part 3: チームワークフロー
+├── slide/                      # 勉強会用スライド原稿
 ├── CLAUDE.md                   # Claude Code の設定・規約・エージェント定義
 ├── .mcp.json                   # MCP サーバー設定（Context7 等）
 └── .claude/
@@ -35,13 +55,73 @@ AI駆動開発/
         └── ai-usecase-templates.md # セクション執筆用テンプレート集
 ```
 
-| ファイル | 役割 |
+| パス | 役割 |
 |---|---|
-| `AI駆動開発.md` | メイン技術資料。このリポジトリで唯一編集する成果物 |
+| `AI駆動開発.md` | **【蓄積】** 調査結果を溜め込む一次ソース。網羅性優先で、長さ・重複は許容する |
+| `contents/` | **【発信】** 読者に届ける単位に再編集した成果物。1ファイル = Zenn記事1本 |
+| `構成.md` | `contents/` の構成設計書。確定方針・命名規則・執筆テンプレート |
+| `slide/` | 勉強会用スライド原稿。`contents/` から派生させる |
 | `CLAUDE.md` | Claude Code の動作規約・エージェント委譲ルール・スラッシュコマンド定義 |
 | `skills/doc-standards.md` | Mermaid記法・見出し規約・文体ガイド（エージェントが参照） |
 | `skills/research-patterns.md` | 情報源の優先順位・検索クエリパターン（エージェントが参照） |
 | `skills/ai-usecase-templates.md` | ツール紹介・比較・設定ガイドなど5種類のテンプレート |
+
+---
+
+## コンテンツ構成（`contents/`）
+
+このリポジトリは **蓄積（インプット）** と **発信（アウトプット）** を分離している。
+
+```mermaid
+flowchart LR
+    W["Web調査 / 実務メモ<br/>(/research)"] --> S["AI駆動開発.md<br/>【蓄積】網羅・重複OK"]
+    S --> C["contents/<br/>【発信】1テーマ = 1記事"]
+    C --> Z["Zenn 記事"]
+    C --> P["勉強会スライド (slide/)"]
+
+    style S fill:#f5f5f5,stroke:#6c757d,color:#000
+    style C fill:#dbeafe,stroke:#2563eb,color:#000
+    style Z fill:#dcfce7,stroke:#16a34a,color:#000
+    style P fill:#dcfce7,stroke:#16a34a,color:#000
+```
+
+> `contents/` は `AI駆動開発.md` のコピーではなく、**読者を1人決めて書き直したもの**。
+
+### 番号帯によるグルーピング
+
+番号は **10 番刻み**。連番だと途中挿入のたびに全リネームが発生するため。
+
+| 番号帯 | パート | 内容 |
+|---|---|---|
+| `00_` | 導入 | 全体像・読み方 |
+| `01_`〜`09_` | Part 1：仕組み編 | AIエージェントを構成する部品そのものの解説 |
+| `10_`〜`19_` | Part 2：開発フェーズ編 | 要件定義〜テストまで、工程に沿った活用法 |
+| `20_`〜`29_` | Part 3：横断・運用編 | 特定フェーズに属さない、通しで効くテーマ |
+
+### 執筆ルール（要点）
+
+| ルール | 内容 |
+|---|---|
+| ファイル名 | `NN_kebab-case.md`（**ASCII 必須**。日本語は H1 タイトルで表現） |
+| frontmatter | `title` / `status` / `updated` / `source` / `tags` を必須。`source` に出典行を残す |
+| 本文構成 | 結論 → 背景・課題 → 具体的な方法 → プロンプト例 → 注意点 → 参考リンク |
+| 分量 | 1ファイル 3,000〜6,000字。超えたら分割 |
+| 目次 | 各ディレクトリの `README.md` がファイル一覧の唯一の情報源 |
+
+詳細な規約とテンプレートは [構成.md](構成.md) および [CLAUDE.md](CLAUDE.md) を参照。
+
+### 執筆フロー
+
+```mermaid
+flowchart LR
+    A["/research [トピック]"] --> B["AI駆動開発.md に追記"]
+    B --> C["contents/ の該当ファイルを執筆"]
+    C --> D["/review"]
+    D --> E["README.md の状態列を更新"]
+    E --> F["git commit"]
+```
+
+**着手順の推奨**：`01_claude-code`（土台）→ `02_mcp`（量産しやすい）→ `20_github-claude`（実務で即使える）→ 以降フェーズ順
 
 ---
 
@@ -94,24 +174,28 @@ AI駆動開発/
 
 ### エージェント一覧
 
-| エージェント | 役割 | 使用モデル |
+| エージェント | 役割 | `model` 指定 |
 |---|---|---|
-| `doc-writer` | セクション執筆・改善 | Claude Sonnet 4.6 |
-| `doc-reviewer` | 総合品質レビュー | Claude Sonnet 4.6 |
-| `format-checker` | 書式・Mermaid構文チェック | Claude Haiku 4.5 |
-| `research-agent` | Web検索・公式ドキュメント調査 | Claude Sonnet 4.6 |
-| `fact-checker` | 事実関係のWeb検証 | Claude Sonnet 4.6 |
-| `senior-engineer-reviewer` | ベテラン視点の実用性レビュー | Claude Opus 4.6 |
-| `skill-architect` | スキルファイルの設計・生成 | Claude Sonnet 4.6 |
-| `readme-updater` | README.md をスキル構成に同期 | Claude Sonnet 4.6 |
+| `doc-writer` | セクション執筆・改善 | `sonnet` |
+| `doc-reviewer` | 総合品質レビュー | `sonnet` |
+| `format-checker` | 書式・Mermaid構文チェック | `haiku` |
+| `research-agent` | Web検索・公式ドキュメント調査 | `sonnet` |
+| `fact-checker` | 事実関係のWeb検証 | `sonnet` |
+| `senior-engineer-reviewer` | ベテラン視点の実用性レビュー | `opus` |
+| `skill-architect` | スキルファイルの設計・生成 | `sonnet` |
+| `readme-updater` | README.md をスキル構成に同期 | `sonnet` |
+
+> **エイリアス指定にしている理由**：`model:` にはバージョン固定のモデルID（`claude-sonnet-4-6` 等）ではなく **エイリアス**（`sonnet` / `opus` / `haiku`）を指定する。固定IDはモデルが更新されるたびに陳腐化し、実際の挙動とドキュメントがずれる。
+>
+> **現時点（2026年8月）のエイリアス解決先**：`sonnet` → Claude Sonnet 5 ／ `opus` → Claude Opus 5 ／ `haiku` → Claude Haiku 4.5。最難度タスク向けに Claude Fable 5（`claude-fable-5`）もある。
 
 #### モデル選択の基準
 
 ```mermaid
 flowchart LR
-    A{タスクの種類} -->|パターンマッチ・軽量| B[Haiku\nformat-checker]
-    A -->|調査・執筆・標準レビュー| C[Sonnet\ndoc-writer, research-agent 等]
-    A -->|深い判断・アーキテクチャ評価| D[Opus\nsenior-engineer-reviewer]
+    A{タスクの種類} -->|パターンマッチ・軽量| B[Haiku<br/>format-checker]
+    A -->|調査・執筆・標準レビュー| C[Sonnet<br/>doc-writer, research-agent 等]
+    A -->|深い判断・アーキテクチャ評価| D[Opus<br/>senior-engineer-reviewer]
 ```
 
 ### Skills（共有ナレッジ）との連携
@@ -122,9 +206,9 @@ flowchart LR
 ```mermaid
 flowchart TD
     subgraph skills/
-        S1[doc-standards.md\n書式・文体規約]
-        S2[research-patterns.md\n調査パターン]
-        S3[ai-usecase-templates.md\nテンプレート集]
+        S1[doc-standards.md<br/>書式・文体規約]
+        S2[research-patterns.md<br/>調査パターン]
+        S3[ai-usecase-templates.md<br/>テンプレート集]
     end
 
     subgraph エージェント
@@ -206,7 +290,7 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    A["/research （引数なし）\n全ツールの最新バージョン調査"] --> B[Outdated 項目を更新]
+    A["/research （引数なし）<br/>全ツールの最新バージョン調査"] --> B[Outdated 項目を更新]
     B --> C["/review で品質確認"]
     C --> D["git commit"]
 ```
@@ -226,9 +310,9 @@ sequenceDiagram
     participant DR as doc-reviewer
 
     U->>CC: /add-section Claude Code サブエージェント
-    CC->>RA: Web調査を委譲\n(skills/research-patterns.md を参照)
+    CC->>RA: Web調査を委譲<br/>(skills/research-patterns.md を参照)
     RA-->>CC: 調査結果・信頼度付きレポート
-    CC->>DW: セクション執筆を委譲\n(skills/doc-standards.md + ai-usecase-templates.md を参照)
+    CC->>DW: セクション執筆を委譲<br/>(skills/doc-standards.md + ai-usecase-templates.md を参照)
     DW-->>CC: 草稿（Mermaid図・表含む）
     CC->>DR: レビューを委譲
     DR-->>CC: 指摘事項リスト
@@ -242,6 +326,7 @@ CLAUDE.md に定義された条件に応じて、Claude Code が自動でエー�
 | 状況 | 自動委譲先 |
 |---|---|
 | `AI駆動開発.md` を編集した後 | `/review`（品質確認） |
+| `contents/` 配下のファイルを編集した後 | `/review`（品質確認） |
 | 新セクションの追加指示を受けた | `/add-section [トピック]` |
 | 最新情報の確認が必要な場合 | `/research [トピック]` |
 | ゼロからドキュメント作成の指示を受けた | `/new-doc [テーマ]` |
@@ -255,9 +340,16 @@ CLAUDE.md に定義された条件に応じて、Claude Code が自動でエー�
 # VS Code でマークダウンプレビュー
 Ctrl+Shift+V
 
-# 変更をコミット
+# 蓄積側の変更をコミット
 git add AI駆動開発.md
 git commit -m "update: AI駆動開発.mdを更新"
+
+# 発信側の変更をコミット
+git add contents/
+git commit -m "docs(contents): 01_claude-code/04_skills.md を追加"
+
+# 未着手の記事を一覧する
+grep -rn "未着手" contents/*/README.md
 
 # 変更差分の確認
 git diff AI駆動開発.md

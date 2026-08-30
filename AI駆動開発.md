@@ -438,7 +438,7 @@ Anthropic 公式 "Building Effective Agents" が整理する 4 パターンに�
 flowchart TB
     H["👤 指示"] --> CC["Claude Code<br/>メインエージェント<br/>(Sonnet 5)"]
     subgraph Panel["🎯 異種モデルパネル（並列）"]
-        A["sub-agent A<br/>Claude Opus 4.8 / Fable 5<br/>深い推論・設計判断"]
+        A["sub-agent A<br/>Claude Opus 5 / Fable 5<br/>深い推論・設計判断"]
         B["sub-agent B<br/>Antigravity CLI (agy)<br/>大規模コンテキスト解析"]
         C["sub-agent C<br/>GPT (gpt-5-codex) via omni-ai-mcp<br/>第3視点レビュー"]
     end
@@ -505,7 +505,7 @@ sub-agent 側では `tools: mcp__omni-ai__chat` のように MCP ツールを指
 # 指示
 本 PR の設計判断について、以下の3エージェントに独立レビューを依頼してください。
 （エージェント名は事前に `.claude/agents/` へ定義しておくこと）
-- senior-engineer-reviewer（Claude Opus 4.8 / 深い推論）
+- senior-engineer-reviewer（Claude Opus 5 / 深い推論）
 - gemini-reviewer（Antigravity CLI `agy` / 広域コンテキスト）
 - gpt-reviewer（omni-ai-mcp 経由 gpt-5-codex / 第3視点）
 
@@ -2359,7 +2359,7 @@ sequenceDiagram
 
 > **ポイント**：Claude Design が得意なのは「ブランド・コードベースに整合したUIの高速生成」。ブランドの世界観やユーザー心理を踏まえた「こだわり」は人間のデザイナーが加える。handoff bundleでClaude Codeへ直接引き渡せるため、モック→実装の距離が短くなる。
 
-> **注意**：Claude Design はトークン消費が大きく（Proプランで週次制限あり）、リアルタイムコラボレーションには未対応（2026年7月時点）。Figmaへの直接exportは現状 Anima 経由となる。Claude Opus 4.8 をデフォルトモデルとして使用する。
+> **注意**：Claude Design はトークン消費が大きく（Proプランで週次制限あり）、リアルタイムコラボレーションには未対応（2026年7月時点）。Figmaへの直接exportは現状 Anima 経由となる。Claude Opus 5 をデフォルトモデルとして使用する。
 
 ### 5.2 AIによるデザインレビュー・評価
 
@@ -2626,7 +2626,7 @@ claude -p "すべてのAPIエンドポイントをリストアップして" --ou
 | モデル             | 用途                                             |
 | ------------------ | ------------------------------------------------ |
 | Claude Sonnet 5 系 | 日常的なコーディング・複数ファイルを含む機能実装（デフォルト推奨） |
-| Claude Opus 4.8 / Claude Fable 5 | 複雑なアーキテクチャ設計・難解なバグ修正・長期エージェントタスク |
+| Claude Opus 5 / Claude Fable 5 | 複雑なアーキテクチャ設計・難解なバグ修正・長期エージェントタスク |
 | Claude Haiku 4.5   | 高速な補完・単純なリファクタリング・文言修正     |
 | Grok 4.5           | 長時間タスク・データサイエンス／金融・法務ドメイン |
 
@@ -2660,7 +2660,7 @@ Composerにターミナル上で自律的にテストやコマンドを実行さ
 
 ### 6.3 GitHub Copilot ベストプラクティス
 
-最新の GitHub Copilot では、Claude Sonnet 5 / Claude Opus 4.8、OpenAI gpt-5-codex、Google Gemini 3.5 Flash など主要モデルを横断的に選択可能。**Copilot Workspace が GA** となり、複数エージェント（Copilot・Claude・Codex）に対して**タスクを並列アサインできる GitHub ネイティブなマルチエージェント作業スペース**として稼働しています。
+最新の GitHub Copilot では、Claude Sonnet 5 / Claude Opus 5、OpenAI gpt-5-codex、Google Gemini 3.5 Flash など主要モデルを横断的に選択可能。**Copilot Workspace が GA** となり、複数エージェント（Copilot・Claude・Codex）に対して**タスクを並列アサインできる GitHub ネイティブなマルチエージェント作業スペース**として稼働しています。
 
 > **2026年の主要アップデート**：
 > - **並列セッション**：複数エージェントセッションをサイドバイサイドで同時実行
@@ -2676,7 +2676,7 @@ Composerにターミナル上で自律的にテストやコマンドを実行さ
 | 選択モデル              | 用途・得意領域                                                             |
 | ----------------------- | -------------------------------------------------------------------------- |
 | Claude Sonnet 5         | 新規機能の実装、フロントエンドコンポーネント・UIの生成（もっとも推奨）    |
-| Claude Opus 4.8 / Fable 5 | 大規模設計判断・複雑なリファクタリング・長期エージェント                |
+| Claude Opus 5 / Fable 5 | 大規模設計判断・複雑なリファクタリング・長期エージェント                |
 | gpt-5-codex             | 複雑なバックエンドロジック構築・数値解析・難解なデバッグ                   |
 | Gemini 3.5 Flash        | 高速・大量トークン処理（Antigravity 2.0 連携時）                           |
 
@@ -3309,26 +3309,39 @@ jobs:
 | **Generator** | テスト計画から実行可能なコードを生成       |
 | **Healer**    | テスト失敗時に自動修正                     |
 
-**利用例**：
+**セットアップ**：
+
+エージェント定義ファイル一式をスキャフォールドする方式である。
+
+```bash
+# planner / generator / healer のエージェント定義、.mcp.json、seed.spec.ts を生成
+npx playwright init-agents --loop=claude
+```
+
+`--loop` にはホストとなる AI ツールを指定する（`claude` / `vscode` / `opencode` / `cursor` 等）。
+
+> **`npx playwright agent plan` のような CLI サブコマンドは存在しない。** Planner / Generator は生成された `.claude/agents/*.md` のエージェント定義であり、Claude Code などのホスト側から**エージェントとして**呼び出す。CLI から直接叩けるのは Healer に対する `npx playwright test --agent=healer` のみである。
+
+**Healer の有効化**：
+
+Healer は opt-in であり、デフォルトでは無効。
 
 ```typescript
 // playwright.config.ts
 import { defineConfig } from "@playwright/test";
+
 export default defineConfig({
-  use: {
-    // Enable AI-powered healing
-    agents: { heal: true },
-  },
+  // ⚠️ use の中ではなくトップレベル。キーは heal ではなく healer
+  agents: { healer: true },
 });
 ```
 
 ```bash
-# AI Planning: アプリを探索してテスト計画を生成
-npx playwright agent plan --url http://localhost:3000
-
-# AI Generation: テスト計画からコードを生成
-npx playwright agent generate --plan test-plan.md
+# 有効化したうえで、明示的に呼び出す
+npx playwright test --agent=healer
 ```
+
+> **CI 用の設定では `agents: { healer: true }` を入れない。** 本来検知すべき退行まで自動「修正」してしまい、テストが存在する意味が失われる。人間がローカルで保守作業をするときだけ有効化する。
 
 ### 8.3 AI × テストピラミッド
 
@@ -5089,9 +5102,11 @@ Claude Code のデフォルト設定は利便性優先で緩めに振られて�
 **リポジトリ構成（推奨）**
 
 ```text
-.claude/
-  CLAUDE.md              # プロジェクト憲法（チーム共有、git管理）
-  settings.json          # Hooks・権限設定
+プロジェクトルート/
+  CLAUDE.md              # プロジェクト憲法（★ルート直下・固定。.claude/ の中ではない）
+  .mcp.json              # MCP サーバー定義
+  .claude/
+    settings.json          # Hooks・権限設定
   settings.local.json    # 個人設定（.gitignore）
   commands/              # カスタムスラッシュコマンド
     spec.md              # 仕様書生成
@@ -5240,17 +5255,17 @@ flowchart TB
 | タスク                   | 推奨モデル                  |
 | ------------------------ | --------------------------- |
 | 日常的なコーディング     | Claude Sonnet 5（`claude-sonnet-5`）／デフォルト |
-| 複雑なアーキテクチャ設計 | Claude Opus 4.8（`claude-opus-4-8`）／ gpt-5-codex |
+| 複雑なアーキテクチャ設計 | Claude Opus 5（`claude-opus-5`）／ gpt-5-codex |
 | 最難度の推論・長期エージェント | Claude Fable 5（`claude-fable-5`、2026/6/9 GA） |
 | 高速補完・単純タスク     | Claude Haiku 4.5（`claude-haiku-4-5-20251001`） |
 | コスト重視の自動化       | Claude Haiku 4.5（非インタラクティブ） |
-| 規制産業・Azure 統制下   | **Claude on Azure**（Azure AI Foundry 経由で Sonnet 5・Opus 4.8 系を利用可。Microsoft 365 Copilot・Copilot Studio・GitHub Copilot からモデル選択可能） |
+| 規制産業・Azure 統制下   | **Claude on Azure**（Azure AI Foundry 経由で Sonnet 5・Opus 5 系を利用可。Microsoft 365 Copilot・Copilot Studio・GitHub Copilot からモデル選択可能） |
 
 > **重要な仕様変更**（Sonnet 5 以降）：
 > - Adaptive Thinking がデフォルトON。manual Extended Thinking は廃止（設定すると400エラー）
 > - temperature/top_p/top_k を非デフォルト値にすると400エラー
 > - 新トークナイザーで同一テキストが約30%多くトークン計上される
-> - コンテキスト窓は Sonnet 5・Opus 4.8・Fable 5 いずれも **1M トークン**
+> - コンテキスト窓は Sonnet 5・Opus 5・Fable 5 いずれも **1M トークン**
 
 ### セキュリティ必須チェック
 
