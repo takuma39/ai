@@ -6,10 +6,10 @@
 
 | ファイル | 内容 | 出典（`AI駆動開発.md` のセクション） | 状態 |
 | --- | --- | --- | --- |
-| [`00_what-is-ai-driven-dev.md`](00_what-is-ai-driven-dev.md) | 対象読者・AI駆動開発の3大原則 | § 0. はじめに | レビュー中 |
-| [`01_dev-flow-overview.md`](01_dev-flow-overview.md) | 全体フロー図・フェーズ別ツール連携図 | § 使用ツール / ツール連携図 | レビュー中 |
-| [`02_deliverables-and-dod.md`](02_deliverables-and-dod.md) | 各フェーズの成果物・完了条件・よくある失敗 | § 各フェーズの成果物と完了条件 | レビュー中 |
-| [`03_design-doc-structure.md`](03_design-doc-structure.md) | 設計書ディレクトリの標準（命名規則・規模別パターン） | § 設計書ディレクトリ構造の標準 | レビュー中 |
+| [`00_what-is-ai-driven-dev.md`](00_what-is-ai-driven-dev.md) | 対象読者・AI駆動開発の3大原則 | § 0. はじめに | 執筆中 |
+| [`01_dev-flow-overview.md`](01_dev-flow-overview.md) | 全体フロー図・フェーズ別ツール連携図 | § 使用ツール / ツール連携図 | 執筆中 |
+| [`02_deliverables-and-dod.md`](02_deliverables-and-dod.md) | 各フェーズの成果物・完了条件・よくある失敗 | § 各フェーズの成果物と完了条件 | 執筆中 |
+| [`03_design-doc-structure.md`](03_design-doc-structure.md) | 設計書ディレクトリの標準（命名規則・規模別パターン） | § 設計書ディレクトリ構造の標準 | 執筆中 |
 
 > 🆕 = `AI駆動開発.md` に記述がなく、新規執筆が必要な項目。
 

@@ -6,24 +6,24 @@
 
 | ファイル | 内容 | 出典（`AI駆動開発.md` のセクション） | 状態 |
 | --- | --- | --- | --- |
-| [`01_setup.md`](01_setup.md) | .mcp.json の書き方、スコープ、認証、トラブルシュート 🆕 | —（新規執筆） | レビュー中 |
-| [`02_tool-reduction.md`](02_tool-reduction.md) | MCP を入れすぎたときのコンテキスト汚染と対策 | § 10.4 MCP ツールの"減らす"最適化 | レビュー中 |
-| [`10_github.md`](10_github.md) | 【開発】GitHub MCP / gh CLI の使い分け | § 6.8 プロジェクト管理 MCP連携（GitHub / Jira） | レビュー中 |
-| [`11_serena.md`](11_serena.md) | 【開発】LSP ベースの symbol-level 検索でトークン削減 | § 6.12 Serena MCP | レビュー中 |
-| [`12_context7.md`](12_context7.md) | 【開発】最新ライブラリドキュメントの on-demand 参照 | § 6.11 Context7 MCP | レビュー中 |
-| [`13_postgres.md`](13_postgres.md) | 【開発】スキーマ参照・クエリ実行 | § 6.9 データベース MCP連携（Postgres） | レビュー中 |
-| [`14_apidog.md`](14_apidog.md) | 【開発】OpenAPI 仕様と実装のギャップ検出 | § 6.10 Apidog MCP | レビュー中 |
-| [`20_playwright.md`](20_playwright.md) | 【テスト】E2E 自動生成・Playwright Agents | § 8.2 Playwright Agents | レビュー中 |
-| [`21_chrome-devtools.md`](21_chrome-devtools.md) | 【テスト】ブラウザ実機操作・パフォーマンス計測 🆕 | —（新規執筆） | レビュー中 |
-| [`30_figma.md`](30_figma.md) | 【デザイン】デザイントークン取得 → コード実装 | § 5.5 Figma MCP → コード実装ワークフロー / § 5.6 デザイントークンワークフロー | レビュー中 |
-| [`40_notion.md`](40_notion.md) | 【情報】ドキュメント検索・書き戻し | § 仕組み「主要MCPサーバー一覧」/ § 9.6 RAG・ナレッジベース活用（Notion 専用セクションは原本になし） | レビュー中 |
-| [`41_box.md`](41_box.md) | 【情報】Excel / PDF / Word の検索・要約 | § 6.13 Box MCP × 社内資料活用 | レビュー中 |
-| [`42_slack.md`](42_slack.md) | 【情報】過去議論・ナレッジ活用 | § 6.14 Slack MCP × 過去議論・ナレッジ活用 | レビュー中 |
-| [`43_google-drive.md`](43_google-drive.md) | 【情報】Google Drive と SharePoint / OneDrive（Work IQ）をまとめて扱う | § 6.13 内「代替：SharePoint / OneDrive / Google Drive」 | レビュー中 |
-| [`50_datadog.md`](50_datadog.md) | 【運用】監視・自然言語 RCA | § 9.7 モニタリング・インシデント対応 MCP連携（Datadog） | レビュー中 |
-| [`51_terraform.md`](51_terraform.md) | 【運用】IaC の安全な生成 | § 9.11 IaC × AI（Terraform MCP / Pulumi Neo） | レビュー中 |
-| [`52_docker.md`](52_docker.md) | 【運用】コンテナ操作（Gordon） | § 9.9 コンテナ・Docker × AI | レビュー中 |
-| [`90_context-chain.md`](90_context-chain.md) | 複数 MCP を跨いだ情報の受け渡し | § 10.5 Skills × MCP の連携フロー / § 10.6 MCP横断コンテキストチェーン | レビュー中 |
+| [`01_setup.md`](01_setup.md) | .mcp.json の書き方、スコープ、認証、トラブルシュート 🆕 | —（新規執筆） | 執筆中 |
+| [`02_tool-reduction.md`](02_tool-reduction.md) | MCP を入れすぎたときのコンテキスト汚染と対策 | § 10.4 MCP ツールの"減らす"最適化 | 執筆中 |
+| [`10_github.md`](10_github.md) | 【開発】GitHub MCP / gh CLI の使い分け | § 6.8 プロジェクト管理 MCP連携（GitHub / Jira） | 執筆中 |
+| [`11_serena.md`](11_serena.md) | 【開発】LSP ベースの symbol-level 検索でトークン削減 | § 6.12 Serena MCP | 執筆中 |
+| [`12_context7.md`](12_context7.md) | 【開発】最新ライブラリドキュメントの on-demand 参照 | § 6.11 Context7 MCP | 執筆中 |
+| [`13_postgres.md`](13_postgres.md) | 【開発】スキーマ参照・クエリ実行 | § 6.9 データベース MCP連携（Postgres） | 執筆中 |
+| [`14_apidog.md`](14_apidog.md) | 【開発】OpenAPI 仕様と実装のギャップ検出 | § 6.10 Apidog MCP | 執筆中 |
+| [`20_playwright.md`](20_playwright.md) | 【テスト】E2E 自動生成・Playwright Agents | § 8.2 Playwright Agents | 執筆中 |
+| [`21_chrome-devtools.md`](21_chrome-devtools.md) | 【テスト】ブラウザ実機操作・パフォーマンス計測 🆕 | —（新規執筆） | 執筆中 |
+| [`30_figma.md`](30_figma.md) | 【デザイン】デザイントークン取得 → コード実装 | § 5.5 Figma MCP → コード実装ワークフロー / § 5.6 デザイントークンワークフロー | 執筆中 |
+| [`40_notion.md`](40_notion.md) | 【情報】ドキュメント検索・書き戻し | § 仕組み「主要MCPサーバー一覧」/ § 9.6 RAG・ナレッジベース活用（Notion 専用セクションは原本になし） | 執筆中 |
+| [`41_box.md`](41_box.md) | 【情報】Excel / PDF / Word の検索・要約 | § 6.13 Box MCP × 社内資料活用 | 執筆中 |
+| [`42_slack.md`](42_slack.md) | 【情報】過去議論・ナレッジ活用 | § 6.14 Slack MCP × 過去議論・ナレッジ活用 | 執筆中 |
+| [`43_google-drive.md`](43_google-drive.md) | 【情報】Google Drive と SharePoint / OneDrive（Work IQ）をまとめて扱う | § 6.13 内「代替：SharePoint / OneDrive / Google Drive」 | 執筆中 |
+| [`50_datadog.md`](50_datadog.md) | 【運用】監視・自然言語 RCA | § 9.7 モニタリング・インシデント対応 MCP連携（Datadog） | 執筆中 |
+| [`51_terraform.md`](51_terraform.md) | 【運用】IaC の安全な生成 | § 9.11 IaC × AI（Terraform MCP / Pulumi Neo） | 執筆中 |
+| [`52_docker.md`](52_docker.md) | 【運用】コンテナ操作（Gordon） | § 9.9 コンテナ・Docker × AI | 執筆中 |
+| [`90_context-chain.md`](90_context-chain.md) | 複数 MCP を跨いだ情報の受け渡し | § 10.5 Skills × MCP の連携フロー / § 10.6 MCP横断コンテキストチェーン | 執筆中 |
 
 > 🆕 = `AI駆動開発.md` に記述がなく、新規執筆が必要な項目。
 
