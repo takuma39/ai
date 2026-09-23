@@ -1,0 +1,11 @@
+flowchart LR
+    U["ユーザー"] --> M["Claude<br/>（メイン）"]
+    M --> A["Sub Agent A<br/>コードを実装する"]
+    M --> B["Sub Agent B<br/>テストコードを書く"]
+    M --> C["Sub Agent C<br/>ドキュメントを更新する"]
+    classDef hi fill:#ff6b35,stroke:#ff6b35,color:#fff,font-weight:bold
+    classDef sub fill:#1e2430,stroke:#3d4757,color:#e8eaed
+    classDef dim fill:#1e2430,stroke:#3d4757,color:#a8b2c1
+    class M hi
+    class A,B,C sub
+    class U dim

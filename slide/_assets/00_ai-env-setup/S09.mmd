@@ -1,0 +1,12 @@
+flowchart LR
+    ROOT["プロジェクトルート/"] --> CM["CLAUDE.md"]
+    ROOT --> DOT[".claude/"]
+    ROOT --> DOCS["docs/"]
+    ROOT --> SRC["src/<br/>├─ auth/<br/>└─ payment/"]
+    DOCS --> SP["spec/　要件定義<br/>├─ auth/<br/>└─ payment/"]
+    DOCS --> BD["basic_design/　基本設計<br/>├─ auth/<br/>└─ payment/"]
+    DOCS --> DD["detail_design/　詳細設計<br/>├─ auth/<br/>└─ payment/"]
+    classDef hi fill:#1e2430,stroke:#ff6b35,stroke-width:3px,color:#ff6b35
+    classDef root fill:#1e2430,stroke:#3d4757,color:#e8eaed
+    class SP,BD,DD,SRC hi
+    class ROOT,CM,DOT,DOCS root

@@ -1,0 +1,18 @@
+flowchart LR
+    subgraph APP["AIツール"]
+        A1["Claude Code"]
+        A2["ChatGPT"]
+        A3["Cursor"]
+        A4["自作のアプリ<br/>SDK で作る"]
+    end
+    APP --> MCP["MCP<br/>Model Context Protocol"]
+    MCP --> S1["GitHub<br/>コードを読む・書く"]
+    MCP --> S2["Slack<br/>メッセージを送る"]
+    MCP --> S3["Notion<br/>ページを編集する"]
+    MCP --> S4["カレンダー<br/>予定を作る"]
+    classDef hi fill:#ff6b35,stroke:#ff6b35,color:#fff,font-weight:bold
+    classDef sub fill:#1e2430,stroke:#3d4757,color:#e8eaed
+    classDef dim fill:#1e2430,stroke:#3d4757,color:#a8b2c1
+    class MCP hi
+    class A1,A2,A3,A4,S1,S2,S3,S4 sub
+    class APP dim

@@ -1,0 +1,9 @@
+flowchart TB
+    R["AI 環境設定で用意するもの"] --> P1["① ルールを書く<br/>CLAUDE.md"] & P2["② 参照データを置く<br/>仕様書・設計書"] & P3["③ 検証手段を用意する<br/>テスト"]
+    P1 --> D1["毎回渡る前提になる"]
+    P2 --> D2["実装時に読ませる材料になる"]
+    P3 --> D3["与えると精度が上がる"]
+    classDef hi fill:#ff6b35,stroke:#ff6b35,color:#fff,font-weight:bold
+    classDef sub fill:#1e2430,stroke:#3d4757,color:#a8b2c1
+    class P1,P2,P3 hi
+    class D1,D2,D3 sub

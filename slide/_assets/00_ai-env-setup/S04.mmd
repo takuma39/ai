@@ -1,0 +1,10 @@
+flowchart LR
+    A[要件定義] --> B[基本設計] --> C[詳細設計] --> X[["AI 環境設定"]]
+    X --> D[実装] --> E[レビュー] --> F[テスト] --> G[運用]
+    N["ここだけが新しい"] -.-> X
+    classDef hi fill:#ff6b35,stroke:#ff6b35,color:#fff,font-weight:bold
+    classDef dim fill:#1e2430,stroke:#3d4757,color:#8b95a5
+    classDef note fill:none,stroke:none,color:#ff6b35
+    class X hi
+    class A,B,C,D,E,F,G dim
+    class N note

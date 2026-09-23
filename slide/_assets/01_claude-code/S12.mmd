@@ -1,0 +1,19 @@
+sequenceDiagram
+    participant U as あなた
+    participant C as Claude
+    rect rgba(255,107,53,0.08)
+    Note over U,C: Before：Hooks 導入前
+    U->>C: このファイル編集して
+    C-->>U: 編集しました！
+    U->>C: あ、フォーマット崩れてる…
+    C-->>U: すみません、フォーマッターかけました
+    U->>C: 型エラー出てるんだけど
+    C-->>U: 修正しました
+    U->>C: …最初からちゃんとやってくれ
+    end
+    rect rgba(255,107,53,0.22)
+    Note over U,C: After：Hooks 導入後
+    U->>C: このファイル編集して
+    C-->>U: 編集しました！（整形・lint・型チェック済み）
+    U->>C: 完璧。
+    end

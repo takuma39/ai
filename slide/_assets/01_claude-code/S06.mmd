@@ -1,0 +1,12 @@
+flowchart TB
+    R["プロジェクトルート"] --> CM["CLAUDE.md"]
+    R --> DOT[".claude/"]
+    CM --> C1["毎回かならず全文が渡る<br/>だから短く保つ"]
+    DOT --> D1["skills/ … Skills<br/>agents/ … Sub Agent<br/>settings.json … Hooks"]
+    D1 --> D2["必要なときだけ読まれる<br/>だから量は気にしない"]
+    classDef hi fill:#ff6b35,stroke:#ff6b35,color:#fff,font-weight:bold
+    classDef sub fill:#1e2430,stroke:#3d4757,color:#e8eaed
+    classDef dim fill:#1e2430,stroke:#3d4757,color:#a8b2c1
+    class C1,D2 hi
+    class CM,DOT sub
+    class R,D1 dim

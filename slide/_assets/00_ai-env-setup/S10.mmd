@@ -1,0 +1,14 @@
+flowchart LR
+    A["手戻りに<br/>時間が消える"] --> B["AI に前提が<br/>渡っていない"] --> C["AI 環境設定"]
+    C --> D1["① ルールを書く"]
+    C --> D2["② 参照データを置く"]
+    C --> D3["③ 検証手段を用意する"]
+    D1 --> E["前提が揃った状態から始まる"]
+    D2 --> E
+    D3 --> E
+    classDef ng fill:#1e2430,stroke:#3d4757,color:#8b95a5
+    classDef hi fill:#ff6b35,stroke:#ff6b35,color:#fff,font-weight:bold
+    classDef sub fill:#1e2430,stroke:#3d4757,color:#e8eaed
+    class A,B ng
+    class C,E hi
+    class D1,D2,D3 sub

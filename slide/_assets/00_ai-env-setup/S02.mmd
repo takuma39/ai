@@ -1,0 +1,13 @@
+sequenceDiagram
+    autonumber
+    participant D as 開発者
+    participant AI as AI
+    participant R as レビュア
+    D->>AI: 実装を依頼
+    AI-->>D: 動くコード（前提はズレている）
+    D->>R: PR を出す
+    R-->>D: 「この前提が違う」
+    Note over D,R: ここで手戻り
+    D->>AI: 前提を伝え直して再依頼
+    AI-->>D: 作り直したコード
+    Note over D,AI: 書く時間は減った<br/>減った分が手戻りに消えた

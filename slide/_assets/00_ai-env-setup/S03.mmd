@@ -1,0 +1,16 @@
+flowchart TB
+    subgraph ALL["プロジェクトの全情報"]
+        direction TB
+        subgraph READ["AI に渡っている情報"]
+            A["開いているファイル"]
+            B["直前の会話"]
+        end
+        C["仕様書"]
+        D["命名規約"]
+        E["過去の決定理由"]
+    end
+    READ --> OUT["AI はこの内側だけで判断する"]
+    classDef miss fill:#1e2430,stroke:#3d4757,color:#6b7684,stroke-dasharray:4 3
+    classDef hi fill:#ff6b35,stroke:#ff6b35,color:#fff
+    class C,D,E miss
+    class OUT hi

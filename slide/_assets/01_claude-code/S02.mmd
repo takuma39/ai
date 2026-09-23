@@ -1,0 +1,11 @@
+sequenceDiagram
+    participant U as あなた
+    participant CC as Claude Code
+    participant CM as CLAUDE.md
+    participant M as モデル
+    U->>CC: プロンプト
+    CC->>CM: 毎回かならず読む
+    CM-->>CC: プロジェクトのルール
+    CC->>M: ルール ＋ プロンプト
+    M-->>U: 出力
+    Note over CC,CM: 1回目だけではない<br/>やりとりのたびに全文が渡る

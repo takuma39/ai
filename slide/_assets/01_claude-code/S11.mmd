@@ -1,0 +1,9 @@
+flowchart LR
+    PRE["PreToolUse<br/>ツール実行前<br/>危険操作のブロック"] --> RUN["ツール実行<br/>編集・コマンドなど"]
+    RUN --> POST["PostToolUse<br/>ツール実行後<br/>整形・lint・ログ記録"]
+    POST --> STOP["Stop<br/>エージェント停止時<br/>最終チェック・通知"]
+    classDef hi fill:#ff6b35,stroke:#ff6b35,color:#fff,font-weight:bold
+    classDef sub fill:#1e2430,stroke:#3d4757,color:#e8eaed
+    classDef dim fill:#1e2430,stroke:#3d4757,color:#a8b2c1
+    class PRE,POST,STOP hi
+    class RUN dim

@@ -1,0 +1,7 @@
+sequenceDiagram
+    participant M as いまの会話
+    participant S as Sub Agent
+    M->>S: 「全体から該当箇所を探して」
+    Note over S: 別のところで<br/>数十ファイルを読む
+    S-->>M: 見つかった結果の要約だけ
+    Note over M: 探した過程は残らない
