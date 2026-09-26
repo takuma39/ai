@@ -1,0 +1,9 @@
+sequenceDiagram
+    participant U as あなた
+    participant C as Claude
+    rect rgba(255,107,53,0.22)
+    Note over U,C: After：Hooks 導入後
+    U->>C: このファイル編集して
+    C-->>U: 編集しました！（整形・lint・型チェック済み）
+    U->>C: 完璧。
+    end

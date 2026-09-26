@@ -1304,6 +1304,7 @@ graph TD
 │   │       └── SPEC.md                 # 決済機能の仕様
 │   ├── basic_design/
 │   │   ├── BASIC_DESIGN.md
+│   │   ├── DB_DESIGN.md                # 機能をまたぐ設計（後述）
 │   │   ├── auth/
 │   │   │   └── BASIC_DESIGN.md
 │   │   └── payment/
@@ -1320,6 +1321,37 @@ graph TD
     ├── auth/                           # docs/*/auth/ と対応
     └── payment/                        # docs/*/payment/ と対応
 ```
+
+#### 機能をまたぐ設計書はどこに置くか
+
+DB設計・認証基盤・API規約のように、**特定の機能に属さない設計書**がある。これらを機能別サブフォルダに入れると「`auth/` と `payment/` のどちらに置いたか」が判断できなくなり、AI も人も探せなくなる。
+
+判断基準は1つだけである。
+
+> **`src/` のどれか1つと1対1で対応するか。** 対応しないものは、機能フォルダの**1つ上**（各設計書のルート直下）に置く。
+
+| 設計書 | `src/` との対応 | 置き場所 |
+|---|---|---|
+| 認証機能の基本設計 | `src/auth/` と1対1 | `docs/basic_design/auth/` |
+| 決済機能の基本設計 | `src/payment/` と1対1 | `docs/basic_design/payment/` |
+| **DB設計** | どのモジュールにも属さない | **`docs/basic_design/DB_DESIGN.md`** |
+| **API規約・共通エラー設計** | 同上 | **`docs/basic_design/` 直下** |
+| **非機能要件** | 同上 | **`docs/basic_design/` 直下** |
+
+```text
+docs/basic_design/
+├── BASIC_DESIGN.md        # 全体の概要・目次
+├── DB_DESIGN.md           # 機能をまたぐ（揃えない）
+├── API_GUIDELINE.md       # 機能をまたぐ（揃えない）
+├── auth/                  # src/auth/ と揃える
+│   └── BASIC_DESIGN.md
+└── payment/               # src/payment/ と揃える
+    └── BASIC_DESIGN.md
+```
+
+> **例外**：`src/db/` や `src/shared/` のような共通モジュールが実在するなら、それは1対1で対応する。その場合は通常どおり `docs/*/db/` として揃えてよい。**「機能をまたぐから上に置く」のであって、「共通だから上に置く」のではない。**
+
+> **`spec/` だけでなく `basic_design/` `detail_design/` も同じ構造**にする。3つのうち1つだけ機能別にすると、フェーズ間で設計書を追えなくなる。
 
 > **運用のポイント**
 > - `docs/` 配下のルート設計書（`docs/spec/SPEC.md` / `docs/basic_design/BASIC_DESIGN.md` / `docs/detail_design/DETAIL_DESIGN.md`）は「全体の概要・目次」として機能させ、詳細は機能別サブフォルダに委譲する

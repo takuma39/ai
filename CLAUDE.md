@@ -22,7 +22,7 @@ AIを活用した開発手法・ツールに関する技術資料を作成・管
 | `AI駆動開発.md` | **蓄積**：調査結果を溜め込む一次ソース（要件定義〜運用まで全フェーズ） | 網羅性優先。長さ・重複は許容する |
 | `contents/` | **発信**：Zenn記事・勉強会スライド向けに再編集した成果物 | 1ファイル = 1テーマ。単体で読み切れること |
 | `構成.md` | `contents/` の構成設計書（確定方針・命名規則・執筆テンプレート） | 方針を変更するときのみ更新 |
-| `slide/` | 勉強会用スライド原稿 | `contents/` から派生させる |
+| `slide/` | **発信**：勉強会スライド原稿（Canva MCP へ渡す中間形式） | 1ファイル = 1デッキ。`contents/` から派生させる |
 
 > **重要**：`contents/` は `AI駆動開発.md` のコピーではない。**読者を1人決めて書き直したもの**として扱う。蓄積側の網羅性をそのまま持ち込むと「長すぎて読めない」問題が再発する。
 
@@ -73,7 +73,7 @@ AIを活用した開発手法・ツールに関する技術資料を作成・管
 | `10_`〜`19_` | Part 2：開発フェーズ編 | 要件定義〜テストまで、工程に沿った活用法 |
 | `20_`〜`29_` | Part 3：横断・運用編 | 特定フェーズに属さない、通しで効くテーマ |
 
-現在 16 セクション / 102 ファイル。セクション一覧は `構成.md`、**ファイル単位の内訳は各ディレクトリの `README.md`** を唯一の情報源とする（二重管理しない）。
+現在 17 セクション / 111 ファイル。セクション一覧は `構成.md`、**ファイル単位の内訳は各ディレクトリの `README.md`** を唯一の情報源とする（二重管理しない）。
 
 ## 命名規則
 
@@ -121,6 +121,19 @@ AIを活用した開発手法・ツールに関する技術資料を作成・管
 
 ---
 
+# slide/ 執筆規約
+
+規約の実体は [`.claude/skills/slide-standards.md`](.claude/skills/slide-standards.md) を**唯一の情報源**とする（二重管理しない）。ここには外してはいけない原則だけを置く。
+
+- **1デッキ = `contents/` の1ディレクトリ = 1 md ファイル。** ファイル名は ASCII ケバブケース
+- **スライドは記事の要約ではない。** 記事の情報量の7割は捨て、「抜粋 + 誘導」で作る
+- **Canva MCP には `title` と `description` の文字列しか渡せない。** 表・Mermaid図・コードブロックは構造ごと消える
+- **`description` は Canva 側の AI にリライトされる**（`verbatim` は `doc` 専用で presentation では効かない）。コマンド・設定キー・バージョン番号を平文に書かない。画像化するか Canva 上で手作業に回す
+- 画像は `asset_ids` で**最大10枚**
+- Canva へ流す前に**必ず人間のレビューを通す**（`status: review` 以上）
+
+---
+
 # エージェント委譲ルール
 
 ## エージェント一覧とモデル割り当て
@@ -151,6 +164,7 @@ AIを活用した開発手法・ツールに関する技術資料を作成・管
 | `skills/doc-standards.md` | Mermaid記法、見出し規約、文体ガイド | doc-writer, format-checker |
 | `skills/research-patterns.md` | 調査の型、情報源の優先順位、信頼度基準 | research-agent, fact-checker |
 | `skills/ai-usecase-templates.md` | AI活用ドキュメントのテンプレート集 | doc-writer |
+| `skills/slide-standards.md` | スライドの骨格・記法・Canva MCP の制約 | make-slide, slide-to-canva |
 
 ## 自動委譲の判断基準
 
@@ -178,6 +192,8 @@ AIを活用した開発手法・ツールに関する技術資料を作成・管
 | `/create-skill [タイプ] [名前]` | agent/command/knowledge を新規作成・更新 | skill-architect → readme-updater |
 | `/update-readme` | README.md をスキル構成に同期 | readme-updater |
 | `/update-doc [セクション名]` | 既存セクションを最新情報で更新 | research-agent + fact-checker → doc-writer → doc-reviewer |
+| `/make-slide [セクション名]` | `contents/` の1セクションからスライド原稿を生成 | — |
+| `/slide-to-canva [ファイル]` | 原稿を Canva プレゼンに変換 | — |
 
 ---
 
@@ -226,6 +242,7 @@ flowchart LR
 - 調査で得た新情報は**まず `AI駆動開発.md` に追記**する。`contents/` へ直接書かない
 - `contents/` に記事を書いたら frontmatter の `source` に出典行を残し、セクション `README.md` の状態列を更新する
 - `contents/` に新しいファイル・ディレクトリを追加したら、そのセクションの `README.md` と `構成.md` のセクション一覧も更新する
+- `slide/` に原稿を作成・更新したら `slide/README.md` の「状態」列を `未着手 → 執筆中 → レビュー中 → 完了` で更新する
 - シークレット・APIキーは絶対にコミットしない
 - エージェントに共通知識を参照させる場合は `skills/` 内のファイルを Read させること
 
@@ -247,4 +264,8 @@ git commit -m "docs(contents): 01_claude-code/04_skills.md を追加"
 
 # 未着手の記事を一覧する
 grep -rn "未着手" contents/*/README.md
+
+# スライド原稿の変更をコミット
+git add slide/
+git commit -m "docs(slide): 00_overview.md を追加"
 ```

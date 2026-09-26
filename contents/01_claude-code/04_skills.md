@@ -64,7 +64,7 @@ flowchart LR
 
 いずれも `<name>/SKILL.md` の形式で置く。**command 型は `/review` のようにスラッシュコマンドとしても呼べる**ため、定型作業をコマンド化すればチームの誰が実行しても同じ手順が走る。
 
-> 人間が明示的に呼ぶことしか想定しない定型フローは、`.claude/commands/deploy.md` のように **`commands/` に置く**選択肢もある（→ [`09_directory-structure.md`](09_directory-structure.md)）。
+> 人間が明示的に呼ぶことしか想定しない定型フロー（デプロイなど）は、Skill に **`disable-model-invocation: true`** を付けて手動専用にする。旧来の `.claude/commands/` は Skill に統合済みで、同名なら Skill が優先される（→ [`../24_skills/06_invocation-control.md`](../24_skills/06_invocation-control.md)、[`09_directory-structure.md`](09_directory-structure.md)）。
 
 ### 基本形
 
@@ -192,3 +192,4 @@ description には「いつ使うか」を必ず含めて。
 - 関連：[`03_claude-md.md`](03_claude-md.md) — 切り出し元
 - 関連：[`05_sub-agents.md`](05_sub-agents.md) — skills を読む側
 - 関連：[`08_combination-patterns.md`](08_combination-patterns.md) — skills × sub-agent × MCP
+- 発展：[`../24_skills/`](../24_skills/) — Skills の作り方・description・テスト・配布の実践ガイド

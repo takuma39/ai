@@ -14,8 +14,8 @@ updated: 2026-09-23
 # Claude Code の5つの設定
 
 <!-- 尺: 本編19枚。表紙10秒 + 各55秒 ≒ 約18分。12分に詰めるなら S08・S10・S12・S15・S18 を落とす -->
-<!-- 図: Mermaid 10点（上限ちょうど）+ 手貼り3点（S03・S14・S15）。Appendix は手貼りのみ。`./render-figures.sh 01_claude-code` -->
-<!-- 図を1点増やすなら S05 か S18 を文字だけに落とす。asset_ids は10枚が上限 -->
+<!-- 図: Mermaid 11点（S12 が Before/After の2枚1組） + 手貼り3点（S03・S14・S15）。Appendix は手貼りのみ。`./render-figures.sh 01_claude-code` -->
+<!-- ⚠️ Canva の asset_ids は10枚が上限。Canva 経由で流す場合は S05 か S18 を文字だけに落として10点に戻す。今回の配布は Claude Artifact のため上限の対象外 -->
 <!-- 00_ai-env-setup を見ていない前提で成立させている。連続で話す場合は S02 を飛ばす -->
 <!-- 言い換えや比喩は使わない方針。「憲法」「専門書」のような表現を入れない -->
 
@@ -93,7 +93,7 @@ sequenceDiagram
 
 `type: message` ｜ `visual: none`
 
-決まった手順をまとめておくファイルです。**ふだんは短い説明文だけが見えていて、その作業をするときにだけ本文が読み込まれます。**
+決まった手順をまとめておくファイルです。**手順をまとめておくことで、必要なときに呼び出して使うことができます。**
 
 <!-- fig: 図は入れない。この1文だけを大きく置く -->
 <!-- note: 「全タスクで要るか？ No なら Skills」という切り出し基準を口頭で言う -->
@@ -115,8 +115,8 @@ flowchart TB
     SK --> D["Skill を作る Skill<br/>形式と書き方を揃える"]
     classDef hi fill:#ff6b35,stroke:#ff6b35,color:#fff,font-weight:bold
     classDef sub fill:#1e2430,stroke:#3d4757,color:#e8eaed
-    class A hi
-    class SK,B,C,D sub
+    class SK hi
+    class A,B,C,D sub
 ```
 
 <!-- note: ★「Skill を作る Skill」は地味に効く。形式を間違えて動かない事故が減る -->
@@ -252,7 +252,7 @@ flowchart LR
 
 導入前は、編集のたびに「フォーマットは？型は？」と言い直していました。導入後は、言わなくても毎回かかります。
 
-[figure: ★Before は往復3回、After は1回で終わる]
+[figure: ★左に Before（往復3回）、右に After（1回で終わる）を並べる]
 
 ```mermaid
 sequenceDiagram
@@ -268,6 +268,12 @@ sequenceDiagram
     C-->>U: 修正しました
     U->>C: …最初からちゃんとやってくれ
     end
+```
+
+```mermaid
+sequenceDiagram
+    participant U as あなた
+    participant C as Claude
     rect rgba(255,107,53,0.22)
     Note over U,C: After：Hooks 導入後
     U->>C: このファイル編集して
@@ -276,6 +282,7 @@ sequenceDiagram
     end
 ```
 
+<!-- fig: 2点1組。左（Before）・右（After）で横に並べる。縦積みにしない -->
 <!-- note: ★「この差、分かりますか？」と会場に問いかけてから次へ -->
 <!-- note: 型チェックやテストのような重い処理は、編集のたびではなく停止時（Stop）に1回かけるほうが速い -->
 

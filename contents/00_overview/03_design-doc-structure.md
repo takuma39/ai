@@ -1,7 +1,7 @@
 ---
 title: "設計書ディレクトリの標準"
 status: draft
-updated: 2026-08-23
+updated: 2026-09-07
 source: AI駆動開発.md § 設計書ディレクトリ構造の標準
 tags: ["overview", "documentation", "directory"]
 ---
@@ -72,6 +72,7 @@ tags: ["overview", "documentation", "directory"]
 │   │       └── SPEC.md                 # 決済機能の仕様
 │   ├── basic_design/
 │   │   ├── BASIC_DESIGN.md
+│   │   ├── DB_DESIGN.md                # 機能をまたぐ設計（後述）
 │   │   ├── auth/
 │   │   │   └── BASIC_DESIGN.md
 │   │   └── payment/
@@ -88,6 +89,39 @@ tags: ["overview", "documentation", "directory"]
     ├── auth/                           # docs/*/auth/ と対応
     └── payment/                        # docs/*/payment/ と対応
 ```
+
+### 機能をまたぐ設計書はどこに置くか
+
+パターンBで必ず詰まるのがここである。DB設計・認証基盤・API規約のように、**特定の機能に属さない設計書**をどこへ置くか。
+
+機能別サブフォルダに入れると「`auth/` と `payment/` のどちらに置いたか」が判断できなくなる。**探す側（AI も人も）が2箇所を見に行くことになり、見つからなければ「無い」と判断される。**
+
+判断基準は1つだけでよい。
+
+> **`src/` のどれか1つと1対1で対応するか。** 対応しないものは、機能フォルダの**1つ上**（各設計書のルート直下）に置く。
+
+| 設計書 | `src/` との対応 | 置き場所 |
+| --- | --- | --- |
+| 認証機能の基本設計 | `src/auth/` と1対1 | `docs/basic_design/auth/` |
+| 決済機能の基本設計 | `src/payment/` と1対1 | `docs/basic_design/payment/` |
+| **DB設計** | どのモジュールにも属さない | **`docs/basic_design/DB_DESIGN.md`** |
+| **API規約・共通エラー設計** | 同上 | **`docs/basic_design/` 直下** |
+| **非機能要件** | 同上 | **`docs/basic_design/` 直下** |
+
+```text
+docs/basic_design/
+├── BASIC_DESIGN.md        # 全体の概要・目次
+├── DB_DESIGN.md           # 機能をまたぐ（揃えない）
+├── API_GUIDELINE.md       # 機能をまたぐ（揃えない）
+├── auth/                  # src/auth/ と揃える
+│   └── BASIC_DESIGN.md
+└── payment/               # src/payment/ と揃える
+    └── BASIC_DESIGN.md
+```
+
+> **「共通だから上に置く」ではない。** `src/db/` や `src/shared/` のような共通モジュールが**実在するなら**、それは1対1で対応する。その場合は通常どおり `docs/*/db/` として揃えてよい。上に置く理由は「機能をまたぐから」であって「共通だから」ではない。
+
+> **`spec/` だけを機能別にしない。** `basic_design/` `detail_design/` も同じ構造にする。3つのうち1つだけ機能別にすると、「要件は機能別、設計は単層」という状態になり、フェーズ間で設計書を追えなくなる。
 
 ### 運用のポイント
 
