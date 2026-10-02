@@ -1,0 +1,11 @@
+sequenceDiagram
+    participant U as 利用者
+    participant C as Claude
+    participant S as company-glossary
+    U->>C: リリースノートの下書きを書いて
+    C->>C: 説明文と照合し、該当すると判断
+    C->>S: SKILL.md を読み込む
+    C->>U: 社内向けですか、社外向けですか？
+    U->>C: 社外向けです
+    C->>S: references の用語表を読み込む
+    C->>U: 表記を統一した下書きと変更点の表

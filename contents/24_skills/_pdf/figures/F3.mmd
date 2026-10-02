@@ -1,0 +1,9 @@
+flowchart LR
+    A["① 形式<br/>frontmatter<br/>読み込まれたか"] --> B["② description<br/>呼び出されるか"]
+    B --> C["③ 本文の構造<br/>指示に従うか"]
+    C --> D["④ scripts 化<br/>確実に動作するか"]
+    D --> E["⑤ hooks<br/>強制できるか"]
+    classDef a fill:#fee2e2,stroke:#dc2626,color:#1a1a2e
+    classDef e fill:#dbeafe,stroke:#2563eb,color:#1a1a2e
+    class A a
+    class E e

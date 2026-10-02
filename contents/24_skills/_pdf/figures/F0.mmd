@@ -1,0 +1,9 @@
+flowchart LR
+    A["依頼<br/>「リリースノートを<br/>書いて」"] --> B["Claude が全 Skill の<br/>説明文と照合"]
+    B --> C["合う Skill の<br/>SKILL.md を読み込む"]
+    C --> D["手順と資料に沿って<br/>作業する"]
+    B -.->|合う Skill がない| E["Skill なしで<br/>通常どおり回答"]
+    classDef hit fill:#dcfce7,stroke:#16a34a,color:#1a1a2e
+    classDef none fill:#f1f5f9,stroke:#94a3b8,color:#1a1a2e
+    class C hit
+    class E none

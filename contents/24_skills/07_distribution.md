@@ -24,7 +24,7 @@ Skill は **同じ形式（SKILL.md のフォルダ）で複数の環境で使�
 
 ## 背景・課題
 
-チームに Skill を広げようとすると、「誰がどこで使うのか」で詰まる。
+チームに Skill を広げようとすると、「誰がどこで使うのか」で迷いやすい。
 
 | 場面 | 課題 |
 | --- | --- |
@@ -45,7 +45,7 @@ Skill は **同じ形式（SKILL.md のフォルダ）で複数の環境で使�
 | Claude Code 独自フィールド | 使える | 使えない | 使えない |
 | 更新の反映 | 即時 | 再アップロード | バージョンを上げて更新 |
 
-> 実行環境の制約は変わりやすい。**スクリプトを含む Skill は、配布先で動くか実際に試す。** 標準ライブラリだけで書くと移植しやすい。API でバージョンを省略すると最新版が使われる点は、[`08_security-governance.md`](08_security-governance.md) を参照。
+> 実行環境の制約は変わりやすい。**スクリプトを含む Skill は、配布先で動作するか実際に試す。** 標準ライブラリだけで書くと移植しやすい。API でバージョンを省略すると最新版が使われる点は、[`08_security-governance.md`](08_security-governance.md) を参照。
 
 ### claude.ai にアップロードする
 
@@ -53,7 +53,7 @@ Skill は **同じ形式（SKILL.md のフォルダ）で複数の環境で使�
 flowchart LR
     A["1. スキルのフォルダを用意"] --> B["2. ZIP に圧縮"]
     B --> C["3. 設定画面の Skills<br/>（Features）からアップロード"]
-    C --> D["4. 有効化して<br/>言い換え依頼で発動確認"]
+    C --> D["4. 有効化して<br/>言い換えた依頼で呼び出されるか確認"]
 
     style D fill:#dcfce7,stroke:#16a34a,color:#000
 ```
@@ -80,14 +80,14 @@ company-glossary.zip
 | 方法 | 向いている場面 | 注意 |
 | --- | --- | --- |
 | **Git（`.claude/skills/`）** | 1つのリポジトリ内のチーム | レビュー・履歴・ロールバックができる。最初の選択肢 |
-| **プラグイン** | 複数リポジトリ・組織横断で配りたい | `/plugin-name:skill-name` の名前空間で呼ぶ |
+| **プラグイン** | 複数リポジトリ・組織横断で配りたい | `/plugin-name:skill-name` の名前空間で呼び出す |
 | **Enterprise（管理設定）** | 組織として全員に適用したい | 個人・プロジェクトの同名 Skill より優先される |
 
 チーム運用は [`../23_team-workflow/01_shared-resources.md`](../23_team-workflow/01_shared-resources.md)、レビュー体制・バージョン固定は [`08_security-governance.md`](08_security-governance.md) を参照。
 
 ### オープン標準としての Skill
 
-Skill の形式は **Agent Skills** というオープン仕様（[agentskills.io](https://agentskills.io/specification)）として公開されている。仕様の範囲で書けば、他の対応エージェントにも持ち出しやすい。
+Skill の形式は **Agent Skills** というオープン仕様（[agentskills.io](https://agentskills.io/specification)）として公開されている。仕様の範囲で書けば、他の対応エージェントにも移植しやすい。
 
 | 区分 | フィールド |
 | --- | --- |
@@ -100,7 +100,7 @@ Skill の形式は **Agent Skills** というオープン仕様（[agentskills.i
 skills-ref validate ./company-glossary
 ```
 
-| 持ち出し方針 | 内容 |
+| 移植の方針 | 内容 |
 | --- | --- |
 | **共通仕様の範囲で書く** | 移植性が高い。`${CLAUDE_SKILL_DIR}` や `context: fork` は使えない |
 | **Claude Code 拡張を使う** | 機能は豊富。ただし Claude Code 専用になる |
@@ -112,7 +112,7 @@ skills-ref validate ./company-glossary
 # 移植性の確認
 .claude/skills/company-glossary/ を claude.ai にアップロードする想定で確認して。
 - Claude Code 独自のフィールドや ${CLAUDE_SKILL_DIR} を使っていないか
-- スクリプトが標準ライブラリだけで動くか
+- スクリプトが標準ライブラリだけで動作するか
 - name がディレクトリ名と一致しているか
 問題があれば、共通仕様に直した差分を出して。
 
@@ -123,11 +123,11 @@ ZIP 内は company-glossary/SKILL.md の構造にして、不要なファイル�
 
 ## 注意点
 
-> **claude.ai・API・Claude Code の Skill は互いに同期されない。** 原本は Git に置き、各環境へはそこから出す。手作業で個別に直すと、内容がずれる。
+> **claude.ai・API・Claude Code の Skill は互いに同期されない。** 原本は Git に置き、各環境へはそこから配布する。手作業で個別に直すと、内容がずれる。
 
-> **Claude Code 独自フィールドを含む Skill を持ち出すと、その機能は働かない。** 無視されるのか拒否されるのかは環境によるため、持ち出す前にアップロードして確認する。
+> **Claude Code 独自フィールドを含む Skill を他の環境で使うと、その機能は使えない。** 無視されるのか拒否されるのかは環境によるため、使う前にアップロードして確認する。
 
-> **配布したら、更新の責任者を決める。** 配りっぱなしの Skill は古くなる。担当・更新時期・廃止基準は [`08_security-governance.md`](08_security-governance.md) の運用施策に従う。
+> **配布したら、更新の責任者を決める。** 配布したまま更新しない Skill は古くなる。担当・更新時期・廃止基準は [`08_security-governance.md`](08_security-governance.md) の運用施策に従う。
 
 ## 参考リンク
 

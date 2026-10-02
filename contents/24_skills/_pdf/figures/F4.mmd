@@ -1,0 +1,10 @@
+flowchart LR
+    A["入手<br/>skills/ の外に置く"] --> B["機械チェック<br/>lint・grep"]
+    B --> C["人が全ファイルを読む<br/>目的と挙動は一致？"]
+    C --> D["隔離環境で試す"]
+    D --> E["PR で導入<br/>CODEOWNERS 承認"]
+    C -.->|不審点あり| X["導入しない"]
+    classDef ng fill:#fee2e2,stroke:#dc2626,color:#1a1a2e
+    classDef ok fill:#dcfce7,stroke:#16a34a,color:#1a1a2e
+    class X ng
+    class E ok

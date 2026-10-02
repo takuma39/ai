@@ -1,0 +1,26 @@
+{
+  "theme": "base",
+  "themeVariables": {
+    "fontFamily": "Hiragino Sans, Noto Sans JP, sans-serif",
+    "fontSize": "17px",
+    "primaryColor": "#eef2ff",
+    "primaryTextColor": "#1a1a2e",
+    "primaryBorderColor": "#4f46e5",
+    "lineColor": "#64748b",
+    "secondaryColor": "#ecfdf5",
+    "tertiaryColor": "#ffffff",
+    "edgeLabelBackground": "#ffffff"
+  },
+  "flowchart": {
+    "htmlLabels": true,
+    "curve": "basis",
+    "padding": 14,
+    "wrappingWidth": 400
+  },
+  "sequence": {
+    "actorMargin": 40,
+    "width": 170,
+    "messageFontSize": 17,
+    "noteFontSize": 16
+  }
+}

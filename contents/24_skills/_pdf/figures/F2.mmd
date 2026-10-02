@@ -1,0 +1,11 @@
+flowchart LR
+    R["references/<br/>判断が要る規約を読ませる"] -.-> G["Claude が<br/>UI を生成"]
+    G --> V["scripts/ を実行して<br/>数値を検証"]
+    V --> J{"AA 合格？"}
+    J -->|FAIL| F["色を直して<br/>再検証"]
+    F --> V
+    J -->|PASS| OK["完了"]
+    classDef ok fill:#dcfce7,stroke:#16a34a,color:#1a1a2e
+    classDef ng fill:#fee2e2,stroke:#dc2626,color:#1a1a2e
+    class OK ok
+    class F ng

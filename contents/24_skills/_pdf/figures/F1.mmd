@@ -1,0 +1,9 @@
+flowchart LR
+    A["<b>Level 1</b><br/>常時ロード<br/>1件あたり<br/>約100トークン<br/>name + description"] -->|依頼と一致したとき| B["<b>Level 2</b><br/>呼び出し時にロード<br/>500行以内<br/>SKILL.md 本文"]
+    B -->|本文が参照したとき| C["<b>Level 3</b><br/>必要時のみ<br/>references は読む<br/>scripts は実行のみ"]
+    classDef l1 fill:#e0e7ff,stroke:#4f46e5,color:#1a1a2e
+    classDef l2 fill:#dbeafe,stroke:#2563eb,color:#1a1a2e
+    classDef l3 fill:#dcfce7,stroke:#16a34a,color:#1a1a2e
+    class A l1
+    class B l2
+    class C l3
